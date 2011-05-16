@@ -67,7 +67,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const INTERMEDIATE_EVT	:String = "NetConnectionEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.7.8";
+		public static const VERSION				:String = "NetConnectionSmart v 0.7.9";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
@@ -394,6 +394,7 @@ package com.gearsandcogs.utils
 	}
 }
 
+import flash.events.AsyncErrorEvent;
 import flash.events.Event;
 import flash.events.NetStatusEvent;
 import flash.net.NetConnection;
@@ -413,12 +414,13 @@ class PortConnection extends NetConnection
 		this.debug = debug;
 		this.id = id;
 		this.label = label;
-		addStatusHandler();
+		addHandlers();
 	}
 	
-	public function addStatusHandler():void
+	public function addHandlers():void
 	{
 		addEventListener(NetStatusEvent.NET_STATUS,handleNetStatus);
+		addEventListener(AsyncErrorEvent.ASYNC_ERROR,handleAsyncError);
 	}
 	
 	private function handleNetStatus(e:NetStatusEvent):void
@@ -430,6 +432,12 @@ class PortConnection extends NetConnection
 			status = e;
 			dispatchEvent(new Event(STATUS_UPDATE));
 		}
+	}
+	
+	private function handleAsyncError(e:AsyncErrorEvent):void
+	{
+		if(debug)
+			trace("PortConnection: "+e.toString());
 	}
 	
 	public function removeStatusHandler():void
