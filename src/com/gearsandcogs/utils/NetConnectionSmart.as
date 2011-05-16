@@ -15,12 +15,19 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.7.8
-DATE: 4/4/2011
+VERSION: 0.8.1
+DATE: 5/16/2011
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
-Used to connect quickly through firewalls by trying a shotgun connection apprach with netconnections. 
-It does have a few properties like force_tunneling and encrypted that can be set before the connect call is made.
+Used to connect quickly through firewalls by trying a NetConnection via a shotgun connection approach or an incremental connection approach. 
+It does have a few properties like force_tunneling, encrypted, debug, connection_rate, and shotgun_connect that can be set before the connect call is made.
+
+force_tunneling: used if you don't even want to attempt rtmp connections
+enctyped: used if you want to force the use of an encrypted connection (rtmp(t)e)
+debug: if you want to see debug messages via your trace panel
+connection_rate: only applicable if using a non-shotgun approach. Sets the rate that connections are tried. By default this is 200ms
+shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled.
+
 It also has an event that fires to notify the user of a log that was made and is ready for reading.
 
 USAGE:
@@ -60,22 +67,28 @@ package com.gearsandcogs.utils
 	import flash.events.IOErrorEvent;
 	import flash.events.NetStatusEvent;
 	import flash.events.SecurityErrorEvent;
+	import flash.events.TimerEvent;
 	import flash.net.NetConnection;
 	import flash.net.Responder;
+	import flash.utils.Timer;
 	import flash.utils.setTimeout;
 	
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const INTERMEDIATE_EVT	:String = "NetConnectionEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.7.9";
+		public static const VERSION				:String = "NetConnectionSmart v 0.8.1";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
 		
+		public var shotgun_connect				:Boolean = true;
 		public var default_port_only			:Boolean;
 		public var debug						:Boolean;
 		public var event_msg					:String = "";
 		
+		public var connection_rate				:uint = 200;
+
+		private var connect_params				:Array;
 		private var _nc_types					:Array;
 		
 		private var _force_tunneling			:Boolean;
@@ -84,6 +97,14 @@ package com.gearsandcogs.utils
 		private var _nc_client					:Object;
 		
 		private var _nc							:PortConnection;
+		
+		private var app_string					:String;
+		private var connect_string				:String;
+		private var encrypted_string			:String;
+		private var server_string				:String;
+		
+		private var connect_timer				:Timer;
+		
 		
 		public function NetConnectionSmart()
 		{
@@ -112,52 +133,42 @@ package com.gearsandcogs.utils
 		
 		public function connect(command:String, ...parameters):void
 		{
-			var connect_string:String = command.substr(command.indexOf("://")+3);
-			var server_string:String = connect_string.substr(0,connect_string.indexOf("/"));
-			var app_string:String = connect_string.substr(connect_string.indexOf("/"));
-			var encrypted_string:String = _connect_encrypted?"e":"";
+			connect_string = command.substr(command.indexOf("://")+3);
+			connect_params = parameters;
+			server_string = connect_string.substr(0,connect_string.indexOf("/"));
+			app_string = connect_string.substr(connect_string.indexOf("/"));
+			encrypted_string = _connect_encrypted?"e":"";
 			
 			initPortConnections();
 			
-			if(!_force_tunneling){
-				for(var i:String in _nc_types){
-					if(_nc_types[i].protocol == RTMP)
-					{
-						if(default_port_only && _nc_types[i].port != "default")
-							continue;
-						
-						var portpass:String = _nc_types[i].port!="default"?":"+_nc_types[i].port:"";
-						
-						if(debug) 
-							log("connecting to: "+_nc_types[i].protocol+encrypted_string+"://"+server_string+portpass+app_string);
-						
-						_nc_types[i].connection.connect.apply(null,[_nc_types[i].protocol+encrypted_string+"://"+
-							server_string+portpass+app_string].concat(parameters));
-					}
-				}
-			}
-			
-			setTimeout(function():void{
-				if(!connected){
-					for(var i:String in _nc_types)
-					{
-						if(_nc_types[i].protocol == RTMPT)
+			if(shotgun_connect)
+			{
+				if(!_force_tunneling){
+					for(var i:String in _nc_types){
+						if(_nc_types[i].protocol == RTMP)
 						{
-							if(default_port_only && _nc_types[i].port != "default")
-								continue;
-							
-							var portpass:String = _nc_types[i].port!="default"?":"+_nc_types[i].port:"";
-							
-							if(debug) 
-								log("connecting to: "+_nc_types[i].protocol+encrypted_string+"://"+server_string+portpass+app_string);
-							
-							_nc_types[i].connection.connect.apply(null,[_nc_types[i].protocol+encrypted_string+"://"+
-								server_string+portpass+app_string].concat(parameters));
+							initializeConnection(_nc_types[i].connection,_nc_types[i].protocol,_nc_types[i].port,connect_params);
 						}
 					}
-					
 				}
-			},_force_tunneling?10:1000);
+				
+				//delay rtmpt attempts by 1 second
+				setTimeout(function():void
+				{
+					if(!connected){
+						for(var i:String in _nc_types)
+						{
+							if(_nc_types[i].protocol == RTMPT)
+							{
+								initializeConnection(_nc_types[i].connection,_nc_types[i].protocol,_nc_types[i].port,connect_params);
+							}
+						}
+						
+					}
+				},_force_tunneling?10:1000);
+			} else {
+				initializeTimers();
+			}
 		}
 		
 		public function get connected():Boolean
@@ -247,7 +258,7 @@ package com.gearsandcogs.utils
 			_nc = portConnection;
 			
 			_nc.removeEventListener(PortConnection.STATUS_UPDATE,checkNetStatus);
-			_nc.removeStatusHandler();
+			_nc.removeHandlers();
 			
 			_nc.addEventListener(AsyncErrorEvent.ASYNC_ERROR,handleAsyncError);
 			_nc.addEventListener(IOErrorEvent.IO_ERROR,handleIoError);
@@ -255,6 +266,10 @@ package com.gearsandcogs.utils
 			_nc.addEventListener(SecurityErrorEvent.SECURITY_ERROR,handleSecurityError);
 			
 			_nc.client = _nc_client;
+			
+			try {
+				connect_timer.stop();
+			}catch(e:Error){}
 			
 			closeExtraNc();
 		}
@@ -271,14 +286,37 @@ package com.gearsandcogs.utils
 		private function closeDownNc(pc:PortConnection):void
 		{
 			if(debug)
-				trace("Closing down a nc: "+pc.label);
+				trace("Closing down NetConnection: "+pc.label);
 			
 			pc.removeEventListener(PortConnection.STATUS_UPDATE,checkNetStatus);
 			pc.addEventListener(NetStatusEvent.NET_STATUS,nullHandleNetStatus);
 			pc.close();
 			
 			//cleanup listener
-			pc.removeStatusHandler();
+			pc.removeHandlers();
+		}
+		
+		/**
+		 * 
+		 * @param netconnection
+		 * @param protocol
+		 * @param port
+		 * @param parameters
+		 * 
+		 */		
+		
+		private function initializeConnection(connection:NetConnection,protocol:String,port:String, parameters:Array):void
+		{
+			if(default_port_only && port != "default")
+				return;
+			
+			var portpass:String = port!="default"?":"+port:"";
+			
+			if(debug) 
+				log("connecting to: "+protocol+encrypted_string+"://"+server_string+portpass+app_string);
+			
+			connection.connect.apply(null,[protocol+encrypted_string+"://"+
+				server_string+portpass+app_string].concat(parameters));
 		}
 		
 		private function initConnectionTypes():void
@@ -310,6 +348,27 @@ package com.gearsandcogs.utils
 				curr_pc.addEventListener(PortConnection.STATUS_UPDATE,checkNetStatus);
 				_nc_types[i].connection = curr_pc;
 			}
+		}
+		
+		private function initializeTimers():void
+		{
+			connect_timer = new Timer(connection_rate);
+			connect_timer.addEventListener(TimerEvent.TIMER,function(e:TimerEvent):void
+			{
+				var curr_count:uint = _force_tunneling?connect_timer.currentCount+4:connect_timer.currentCount;
+				
+				var curr_connect_obj:Object = _nc_types[curr_count-1];
+				if(!force_tunneling || (_force_tunneling && curr_connect_obj.protocol == RTMPT) )
+					initializeConnection(curr_connect_obj.connection,curr_connect_obj.protocol,curr_connect_obj.port,connect_params);
+				
+				if(curr_count == _nc_types.length)
+				{
+					//all connection attempts have been tried
+					connect_timer.stop();
+				}
+			});
+			
+			connect_timer.start();
 		}
 		
 		private function checkNetStatus(e:Event):void
@@ -419,8 +478,8 @@ class PortConnection extends NetConnection
 	
 	public function addHandlers():void
 	{
-		addEventListener(NetStatusEvent.NET_STATUS,handleNetStatus);
 		addEventListener(AsyncErrorEvent.ASYNC_ERROR,handleAsyncError);
+		addEventListener(NetStatusEvent.NET_STATUS,handleNetStatus);
 	}
 	
 	private function handleNetStatus(e:NetStatusEvent):void
@@ -440,8 +499,9 @@ class PortConnection extends NetConnection
 			trace("PortConnection: "+e.toString());
 	}
 	
-	public function removeStatusHandler():void
+	public function removeHandlers():void
 	{
+		removeEventListener(AsyncErrorEvent.ASYNC_ERROR,handleAsyncError);
 		removeEventListener(NetStatusEvent.NET_STATUS,handleNetStatus);
 	}
 	
