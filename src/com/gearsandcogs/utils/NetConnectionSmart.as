@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.8.1
-DATE: 5/16/2011
+VERSION: 0.8.2
+DATE: 7/6/2011
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
 Used to connect quickly through firewalls by trying a NetConnection via a shotgun connection approach or an incremental connection approach. 
@@ -69,6 +69,7 @@ package com.gearsandcogs.utils
 	import flash.events.SecurityErrorEvent;
 	import flash.events.TimerEvent;
 	import flash.net.NetConnection;
+	import flash.net.ObjectEncoding;
 	import flash.net.Responder;
 	import flash.utils.Timer;
 	import flash.utils.setTimeout;
@@ -76,7 +77,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const INTERMEDIATE_EVT	:String = "NetConnectionEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.8.1";
+		public static const VERSION				:String = "NetConnectionSmart v 0.8.2";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
@@ -105,6 +106,7 @@ package com.gearsandcogs.utils
 		
 		private var connect_timer				:Timer;
 		
+		private var object_encoding				:uint = ObjectEncoding.AMF3;
 		
 		public function NetConnectionSmart()
 		{
@@ -193,12 +195,14 @@ package com.gearsandcogs.utils
 		
 		public function get objectEncoding():uint
 		{
-			return _nc.objectEncoding;
+			return _nc?_nc.objectEncoding:object_encoding;
 		}
 		
 		public function set objectEncoding(encoding:uint):void
 		{
-			_nc.objectEncoding = encoding;
+			object_encoding = encoding;
+			if(_nc)
+				_nc.objectEncoding = encoding;
 		}
 		
 		public function get protocol():String
@@ -340,6 +344,7 @@ package com.gearsandcogs.utils
 			{
 				var port_label:String = encrypted_string+" "+_nc_types[i].protocol+" "+_nc_types[i].port;
 				var curr_pc:PortConnection = new PortConnection(parseInt(i),port_label,debug);
+				curr_pc.objectEncoding = object_encoding;
 				
 				if(force_tunneling && _nc_types[i].protocol == RTMP)
 					curr_pc.status = new NetStatusEvent("skipped");
