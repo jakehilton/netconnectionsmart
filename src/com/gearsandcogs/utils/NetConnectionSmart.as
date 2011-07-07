@@ -15,20 +15,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.8.2
+VERSION: 0.8.3
 DATE: 7/6/2011
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
 Used to connect quickly through firewalls by trying a NetConnection via a shotgun connection approach or an incremental connection approach. 
 It does have a few properties like force_tunneling, encrypted, debug, connection_rate, and shotgun_connect that can be set before the connect call is made.
 
-force_tunneling: used if you don't even want to attempt rtmp connections
+force_tunneling: used if you don't ever want to attempt rtmp connections
 enctyped: used if you want to force the use of an encrypted connection (rtmp(t)e)
 debug: if you want to see debug messages via your trace panel
 connection_rate: only applicable if using a non-shotgun approach. Sets the rate that connections are tried. By default this is 200ms
 shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled.
 
-It also has an event that fires to notify the user of a log that was made and is ready for reading.
+It also has an event,INTERMEDIATE_EVT, that fires each time the event_msg is updated to notify the user that the message is ready for reading (event_msg).
 
 USAGE:
 It's a simple use case really.. just use it as you would the built in NetConnection class. Just specify rtmp as the protocol and let
@@ -43,19 +43,19 @@ client_obj.serverMethod = function(e:Object):void
 trace("server can call this");
 }
 
-var snc:NetConnectionSmart = new NetConnectionSmart();
-snc.client = client_obj;
-snc.encrypted = true; //if this isn't specified it will default to rtmp/rtmpt.. if true it will try rtmpe/rtmpte
-snc.connect("rtmp://myserver.com/application");
+var ncs:NetConnectionSmart = new NetConnectionSmart();
+ncs.client = client_obj;
+ncs.encrypted = true; //if this isn't specified it will default to rtmp/rtmpt.. if true it will try rtmpe/rtmpte
+ncs.connect("rtmp://myserver.com/application");
 
-snc.addEventListener(NetStatusEvent.NET_STATUS,function(e:NetStatusEvent):void
+ncs.addEventListener(NetStatusEvent.NET_STATUS,function(e:NetStatusEvent):void
 {
 trace("connection status: "+e.info.code);
-trace(snc.uri);
-trace(snc.protocol);
+trace(ncs.uri);
+trace(ncs.protocol);
 });
 
-var ns:NetStream = new NetStream(snc.connection);
+var ns:NetStream = new NetStream(ncs.connection);
 
 */
 
@@ -76,15 +76,17 @@ package com.gearsandcogs.utils
 	
 	public class NetConnectionSmart extends EventDispatcher
 	{
-		public static const INTERMEDIATE_EVT	:String = "NetConnectionEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.8.2";
+		public static const INTERMEDIATE_EVT	:String = "NetConnectionSmartIntEvent";
+		public static const VERSION				:String = "NetConnectionSmart v 0.8.3";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
 		
-		public var shotgun_connect				:Boolean = true;
+		public var force_tunneling				:Boolean;
+		public var encrypted					:Boolean;
 		public var default_port_only			:Boolean;
 		public var debug						:Boolean;
+		public var shotgun_connect				:Boolean = true;
 		public var event_msg					:String = "";
 		
 		public var connection_rate				:uint = 200;
@@ -92,8 +94,6 @@ package com.gearsandcogs.utils
 		private var connect_params				:Array;
 		private var _nc_types					:Array;
 		
-		private var _force_tunneling			:Boolean;
-		private var _connect_encrypted			:Boolean;
 		
 		private var _nc_client					:Object;
 		
@@ -139,13 +139,13 @@ package com.gearsandcogs.utils
 			connect_params = parameters;
 			server_string = connect_string.substr(0,connect_string.indexOf("/"));
 			app_string = connect_string.substr(connect_string.indexOf("/"));
-			encrypted_string = _connect_encrypted?"e":"";
+			encrypted_string = encrypted?"e":"";
 			
 			initPortConnections();
 			
 			if(shotgun_connect)
 			{
-				if(!_force_tunneling){
+				if(!force_tunneling){
 					for(var i:String in _nc_types){
 						if(_nc_types[i].protocol == RTMP)
 						{
@@ -154,7 +154,7 @@ package com.gearsandcogs.utils
 					}
 				}
 				
-				//delay rtmpt attempts by 1 second
+				//delay rtmpt attempts by 1 second unless tunneling 
 				setTimeout(function():void
 				{
 					if(!connected){
@@ -167,7 +167,7 @@ package com.gearsandcogs.utils
 						}
 						
 					}
-				},_force_tunneling?10:1000);
+				},force_tunneling?10:1000);
 			} else {
 				initializeTimers();
 			}
@@ -228,26 +228,6 @@ package com.gearsandcogs.utils
 		public function get usingTLS():Boolean
 		{
 			return _nc.usingTLS;
-		}
-		
-		public function get force_tunneling():Boolean
-		{
-			return _force_tunneling;
-		}
-		
-		public function set force_tunneling(tunnel:Boolean):void
-		{
-			_force_tunneling = tunnel;
-		}
-		
-		public function get encrypted():Boolean
-		{
-			return _connect_encrypted;
-		}
-		
-		public function set encrypted(encrypted_connect:Boolean):void
-		{
-			_connect_encrypted = encrypted_connect;
 		}
 		
 		/**
@@ -360,10 +340,10 @@ package com.gearsandcogs.utils
 			connect_timer = new Timer(connection_rate);
 			connect_timer.addEventListener(TimerEvent.TIMER,function(e:TimerEvent):void
 			{
-				var curr_count:uint = _force_tunneling?connect_timer.currentCount+4:connect_timer.currentCount;
+				var curr_count:uint = force_tunneling?connect_timer.currentCount+4:connect_timer.currentCount;
 				
 				var curr_connect_obj:Object = _nc_types[curr_count-1];
-				if(!force_tunneling || (_force_tunneling && curr_connect_obj.protocol == RTMPT) )
+				if(!force_tunneling || (force_tunneling && curr_connect_obj.protocol == RTMPT) )
 					initializeConnection(curr_connect_obj.connection,curr_connect_obj.protocol,curr_connect_obj.port,connect_params);
 				
 				if(curr_count == _nc_types.length)
