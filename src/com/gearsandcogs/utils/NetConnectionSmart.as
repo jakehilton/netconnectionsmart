@@ -77,7 +77,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const INTERMEDIATE_EVT	:String = "NetConnectionSmartIntEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.8.3";
+		public static const VERSION				:String = "NetConnectionSmart v 0.8.4";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
@@ -135,7 +135,7 @@ package com.gearsandcogs.utils
 		
 		public function connect(command:String, ...parameters):void
 		{
-			connect_string = command.substr(command.indexOf("://")+3);
+			connect_string = command.indexOf("://")>-1?command.substr(command.indexOf("://")+3):command;
 			connect_params = parameters;
 			server_string = connect_string.substr(0,connect_string.indexOf("/"));
 			app_string = connect_string.substr(connect_string.indexOf("/"));
