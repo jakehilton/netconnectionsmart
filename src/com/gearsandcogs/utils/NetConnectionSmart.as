@@ -77,13 +77,14 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const INTERMEDIATE_EVT	:String = "NetConnectionSmartIntEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.8.4";
+		public static const VERSION				:String = "NetConnectionSmart v 0.8.4b";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
 		
 		public var force_tunneling				:Boolean;
 		public var encrypted					:Boolean;
+		public var secure						:Boolean;
 		public var default_port_only			:Boolean;
 		public var debug						:Boolean;
 		public var shotgun_connect				:Boolean = true;
@@ -101,7 +102,7 @@ package com.gearsandcogs.utils
 		
 		private var app_string					:String;
 		private var connect_string				:String;
-		private var encrypted_string			:String;
+		private var encrypted_secure_string		:String;
 		private var server_string				:String;
 		
 		private var connect_timer				:Timer;
@@ -139,7 +140,7 @@ package com.gearsandcogs.utils
 			connect_params = parameters;
 			server_string = connect_string.substr(0,connect_string.indexOf("/"));
 			app_string = connect_string.substr(connect_string.indexOf("/"));
-			encrypted_string = encrypted?"e":"";
+			encrypted_secure_string = encrypted?"e":secure?"s":"";
 			
 			initPortConnections();
 			
@@ -297,32 +298,32 @@ package com.gearsandcogs.utils
 			var portpass:String = port!="default"?":"+port:"";
 			
 			if(debug) 
-				log("connecting to: "+protocol+encrypted_string+"://"+server_string+portpass+app_string);
+				log("connecting to: "+protocol+encrypted_secure_string+"://"+server_string+portpass+app_string);
 			
-			connection.connect.apply(null,[protocol+encrypted_string+"://"+
+			connection.connect.apply(null,[protocol+encrypted_secure_string+"://"+
 				server_string+portpass+app_string].concat(parameters));
 		}
 		
 		private function initConnectionTypes():void
 		{
 			_nc_types = new Array();
-			_nc_types.push({protocol:RTMP,port:"1935"});
 			_nc_types.push({protocol:RTMP,port:"443"});
+			_nc_types.push({protocol:RTMP,port:"1935"});
 			_nc_types.push({protocol:RTMP,port:"80"});
-			_nc_types.push({protocol:RTMP,port:"default"});
+//			_nc_types.push({protocol:RTMP,port:"default"});
 			
-			_nc_types.push({protocol:RTMPT,port:"1935"});
 			_nc_types.push({protocol:RTMPT,port:"443"});
 			_nc_types.push({protocol:RTMPT,port:"80"});
-			_nc_types.push({protocol:RTMPT,port:"default"});
+			_nc_types.push({protocol:RTMPT,port:"1935"});
+//			_nc_types.push({protocol:RTMPT,port:"default"});
 		}
 		
 		private function initPortConnections():void
 		{
-			var encrypted_string:String = encrypted?"Encrypted ":""; 
+			var encrypted_secure_string:String = encrypted?"Encrypted/Secure ":""; 
 			for(var i:String in _nc_types)
 			{
-				var port_label:String = encrypted_string+" "+_nc_types[i].protocol+" "+_nc_types[i].port;
+				var port_label:String = encrypted_secure_string+" "+_nc_types[i].protocol+" "+_nc_types[i].port;
 				var curr_pc:PortConnection = new PortConnection(parseInt(i),port_label,debug);
 				curr_pc.objectEncoding = object_encoding;
 				
@@ -337,6 +338,9 @@ package com.gearsandcogs.utils
 		
 		private function initializeTimers():void
 		{
+			if(debug)
+				log("Shotgun disabled. Connecting sequentially at a rate of: "+connection_rate);
+			
 			connect_timer = new Timer(connection_rate);
 			connect_timer.addEventListener(TimerEvent.TIMER,function(e:TimerEvent):void
 			{
