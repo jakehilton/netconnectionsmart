@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.8.3
-DATE: 7/6/2011
+VERSION: 0.9.0
+DATE: 6/22/2012
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
 Used to connect quickly through firewalls by trying a NetConnection via a shotgun connection approach or an incremental connection approach. 
@@ -28,7 +28,7 @@ debug: if you want to see debug messages via your trace panel
 connection_rate: only applicable if using a non-shotgun approach. Sets the rate that connections are tried. By default this is 200ms
 shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled.
 
-It also has an event,INTERMEDIATE_EVT, that fires each time the event_msg is updated to notify the user that the message is ready for reading (event_msg).
+It also has an event,MSG_EVT, that fires each time an event is updated.
 
 USAGE:
 It's a simple use case really.. just use it as you would the built in NetConnection class. Just specify rtmp as the protocol and let
@@ -76,8 +76,8 @@ package com.gearsandcogs.utils
 	
 	public class NetConnectionSmart extends EventDispatcher
 	{
-		public static const INTERMEDIATE_EVT	:String = "NetConnectionSmartIntEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.8.4b";
+		public static const MSG_EVT				:String = "NetConnectionSmartMsgEvent";
+		public static const VERSION				:String = "NetConnectionSmart v 0.9.0";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
@@ -88,13 +88,13 @@ package com.gearsandcogs.utils
 		public var default_port_only			:Boolean;
 		public var debug						:Boolean;
 		public var shotgun_connect				:Boolean = true;
-		public var event_msg					:String = "";
 		
 		public var connection_rate				:uint = 200;
 
 		private var connect_params				:Array;
 		private var _nc_types					:Array;
 		
+		private var _is_connecting				:Boolean;
 		
 		private var _nc_client					:Object;
 		
@@ -136,6 +136,11 @@ package com.gearsandcogs.utils
 		
 		public function connect(command:String, ...parameters):void
 		{
+			if(_is_connecting)
+				return;
+			
+			_is_connecting = true;
+			
 			connect_string = command.indexOf("://")>-1?command.substr(command.indexOf("://")+3):command;
 			connect_params = parameters;
 			server_string = connect_string.substr(0,connect_string.indexOf("/"));
@@ -320,10 +325,10 @@ package com.gearsandcogs.utils
 		
 		private function initPortConnections():void
 		{
-			var encrypted_secure_string:String = encrypted?"Encrypted/Secure ":""; 
+			var encrypted_secure_identifier:String = encrypted?"Encrypted/Secure ":" "; 
 			for(var i:String in _nc_types)
 			{
-				var port_label:String = encrypted_secure_string+" "+_nc_types[i].protocol+" "+_nc_types[i].port;
+				var port_label:String = encrypted_secure_identifier+_nc_types[i].protocol+" "+_nc_types[i].port;
 				var curr_pc:PortConnection = new PortConnection(parseInt(i),port_label,debug);
 				curr_pc.objectEncoding = object_encoding;
 				
@@ -363,7 +368,9 @@ package com.gearsandcogs.utils
 		private function checkNetStatus(e:Event):void
 		{
 			var target_connection:PortConnection = e.target as PortConnection;
-			log(target_connection.label+": "+target_connection.status.info.code);
+			
+			if(debug)
+				log(target_connection.label+": "+target_connection.status.info.code);
 			
 			var status_count:uint;
 			var rejected_connection:PortConnection;
@@ -379,10 +386,10 @@ package com.gearsandcogs.utils
 				{
 					acceptNc(curr_connection);
 					dispatchEvent(curr_connection.status);
-					break;
-				} else if(curr_connection.rejected){
+					_is_connecting = false;
+					return;
+				} else if(curr_connection.rejected)
 					rejected_connection = curr_connection;
-				}
 			}
 			
 			//if no success at all return the first rejected message or
@@ -393,8 +400,9 @@ package com.gearsandcogs.utils
 					dispatchEvent(_nc_types[_nc_types.length-1].connection.status);
 				else
 					dispatchEvent(rejected_connection.status);
+				
+				_is_connecting = false;
 			}
-			
 		}
 		
 		private function handleAsyncError(e:AsyncErrorEvent):void
@@ -435,8 +443,8 @@ package com.gearsandcogs.utils
 		{
 			if(debug) 
 				trace("NetConnectionSmart: "+msg);
-			event_msg = msg;
-			dispatchEvent(new Event(INTERMEDIATE_EVT));
+			
+			dispatchEvent(new MsgEvent(MSG_EVT,false,false,msg));
 		}
 		
 	}
@@ -447,6 +455,7 @@ import flash.events.Event;
 import flash.events.NetStatusEvent;
 import flash.net.NetConnection;
 
+//custom port connection class to wrap netconnection
 class PortConnection extends NetConnection
 {
 	public static const STATUS_UPDATE	:String = "status_update";
