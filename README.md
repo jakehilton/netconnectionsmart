@@ -1,9 +1,11 @@
 netconnectionsmart
 ==================
 
-A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port.
+A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port. 
 
 Used to connect quickly through firewalls by trying a NetConnection via a shotgun connection approach or an incremental connection approach.
+
+Possible protocol attempts: rtmp,rtmpt,rtmpe,rtmpte,rtmps,rtmpts.
 
 It does have a few properties like force_tunneling, encrypted, debug, connection_rate, and shotgun_connect that can be set before the connect call is made.
 
