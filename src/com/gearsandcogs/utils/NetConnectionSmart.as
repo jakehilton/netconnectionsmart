@@ -390,6 +390,7 @@ package com.gearsandcogs.utils
 					handleNetStatus(curr_connection.status);
 					_is_connecting = false;
 					_was_connected = true;
+					_reconnect_count = 0;
 					return;
 				} else if(curr_connection.rejected)
 					rejected_connection = curr_connection;
