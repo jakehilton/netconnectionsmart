@@ -15,4 +15,4 @@ debug: if you want to see debug messages via your trace panel
 connection_rate: only applicable if using a non-shotgun approach. Sets the rate that connections are tried. By default this is 200ms
 shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled.
 
-It also has an event,INTERMEDIATE_EVT, that fires each time the event_msg is updated to notify the user that the message is ready for reading (event_msg). This is merly for convenience and will be depricated in favor of a better event model including the message.
+It also has an event,MSG_EVT, that fires to notify the user of an event in the class.
