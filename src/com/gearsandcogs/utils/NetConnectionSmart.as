@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.1
-DATE: 6/22/2012
+VERSION: 0.9.2
+DATE: 10/19/2012
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
 Used to connect quickly through firewalls by trying a NetConnection via a shotgun connection approach or an incremental connection approach. 
@@ -77,7 +77,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT				:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.9.1";
+		public static const VERSION				:String = "NetConnectionSmart v 0.9.2";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
@@ -88,32 +88,33 @@ package com.gearsandcogs.utils
 		public var default_port_only			:Boolean;
 		public var debug						:Boolean;
 		public var shotgun_connect				:Boolean = true;
+		public var auto_reconnect				:Boolean;
 		
 		public var connection_rate				:uint = 200;
+		public var reconnect_count_limit		:uint = 10;
 
-		private var connect_params				:Array;
+		private var _connect_params				:Array;
 		private var _nc_types					:Array;
 		
 		private var _is_connecting				:Boolean;
+		private var _was_connected				:Boolean;
 		
 		private var _nc_client					:Object;
 		
 		private var _nc							:PortConnection;
 		
-		private var app_string					:String;
-		private var connect_string				:String;
-		private var encrypted_secure_string		:String;
-		private var server_string				:String;
+		private var _app_string					:String;
+		private var _connect_string				:String;
+		private var _encrypted_secure_string	:String;
+		private var _server_string				:String;
 		
-		private var connect_timer				:Timer;
+		private var _connect_timer				:Timer;
 		
-		private var object_encoding				:uint = ObjectEncoding.AMF3;
+		private var _object_encoding			:uint = ObjectEncoding.AMF3;
+		private var _reconnect_count			:uint;
 		
 		public function NetConnectionSmart()
 		{
-			if(debug)
-				log(VERSION);
-			
 			_nc_client = new Object();
 			initConnectionTypes();
 		}
@@ -136,16 +137,19 @@ package com.gearsandcogs.utils
 		
 		public function connect(command:String, ...parameters):void
 		{
+			if(debug)
+				log(VERSION);
+			
 			if(_is_connecting || connected)
 				return;
 			
 			_is_connecting = true;
 			
-			connect_string = command.indexOf("://")>-1?command.substr(command.indexOf("://")+3):command;
-			connect_params = parameters;
-			server_string = connect_string.substr(0,connect_string.indexOf("/"));
-			app_string = connect_string.substr(connect_string.indexOf("/"));
-			encrypted_secure_string = encrypted?"e":secure?"s":"";
+			_connect_string = command.indexOf("://")>-1?command.substr(command.indexOf("://")+3):command;
+			_connect_params = parameters;
+			_server_string = _connect_string.substr(0,_connect_string.indexOf("/"));
+			_app_string = _connect_string.substr(_connect_string.indexOf("/"));
+			_encrypted_secure_string = encrypted?"e":secure?"s":"";
 			
 			initPortConnections();
 			
@@ -155,7 +159,7 @@ package com.gearsandcogs.utils
 					for(var i:String in _nc_types){
 						if(_nc_types[i].protocol == RTMP)
 						{
-							initializeConnection(_nc_types[i].connection,_nc_types[i].protocol,_nc_types[i].port,connect_params);
+							initializeConnection(_nc_types[i].connection,_nc_types[i].protocol,_nc_types[i].port,_connect_params);
 						}
 					}
 				}
@@ -168,7 +172,7 @@ package com.gearsandcogs.utils
 						{
 							if(_nc_types[i].protocol == RTMPT)
 							{
-								initializeConnection(_nc_types[i].connection,_nc_types[i].protocol,_nc_types[i].port,connect_params);
+								initializeConnection(_nc_types[i].connection,_nc_types[i].protocol,_nc_types[i].port,_connect_params);
 							}
 						}
 						
@@ -201,12 +205,12 @@ package com.gearsandcogs.utils
 		
 		public function get objectEncoding():uint
 		{
-			return _nc?_nc.objectEncoding:object_encoding;
+			return _nc?_nc.objectEncoding:_object_encoding;
 		}
 		
 		public function set objectEncoding(encoding:uint):void
 		{
-			object_encoding = encoding;
+			_object_encoding = encoding;
 			if(_nc)
 				_nc.objectEncoding = encoding;
 		}
@@ -258,7 +262,7 @@ package com.gearsandcogs.utils
 			_nc.client = _nc_client;
 			
 			try {
-				connect_timer.stop();
+				_connect_timer.stop();
 			}catch(e:Error){}
 			
 			closeExtraNc();
@@ -303,10 +307,10 @@ package com.gearsandcogs.utils
 			var portpass:String = port!="default"?":"+port:"";
 			
 			if(debug) 
-				log("connecting to: "+protocol+encrypted_secure_string+"://"+server_string+portpass+app_string);
+				log("connecting to: "+protocol+_encrypted_secure_string+"://"+_server_string+portpass+_app_string);
 			
-			connection.connect.apply(null,[protocol+encrypted_secure_string+"://"+
-				server_string+portpass+app_string].concat(parameters));
+			connection.connect.apply(null,[protocol+_encrypted_secure_string+"://"+
+				_server_string+portpass+_app_string].concat(parameters));
 		}
 		
 		private function initConnectionTypes():void
@@ -315,12 +319,10 @@ package com.gearsandcogs.utils
 			_nc_types.push({protocol:RTMP,port:"443"});
 			_nc_types.push({protocol:RTMP,port:"1935"});
 			_nc_types.push({protocol:RTMP,port:"80"});
-//			_nc_types.push({protocol:RTMP,port:"default"});
 			
 			_nc_types.push({protocol:RTMPT,port:"443"});
 			_nc_types.push({protocol:RTMPT,port:"80"});
 			_nc_types.push({protocol:RTMPT,port:"1935"});
-//			_nc_types.push({protocol:RTMPT,port:"default"});
 		}
 		
 		private function initPortConnections():void
@@ -330,7 +332,7 @@ package com.gearsandcogs.utils
 			{
 				var port_label:String = encrypted_secure_identifier+_nc_types[i].protocol+" "+_nc_types[i].port;
 				var curr_pc:PortConnection = new PortConnection(parseInt(i),port_label,debug);
-				curr_pc.objectEncoding = object_encoding;
+				curr_pc.objectEncoding = _object_encoding;
 				
 				if(force_tunneling && _nc_types[i].protocol == RTMP)
 					curr_pc.status = new NetStatusEvent("skipped");
@@ -346,23 +348,23 @@ package com.gearsandcogs.utils
 			if(debug)
 				log("Shotgun disabled. Connecting sequentially at a rate of: "+connection_rate);
 			
-			connect_timer = new Timer(connection_rate);
-			connect_timer.addEventListener(TimerEvent.TIMER,function(e:TimerEvent):void
+			_connect_timer = new Timer(connection_rate);
+			_connect_timer.addEventListener(TimerEvent.TIMER,function(e:TimerEvent):void
 			{
-				var curr_count:uint = force_tunneling?connect_timer.currentCount+4:connect_timer.currentCount;
+				var curr_count:uint = force_tunneling?_connect_timer.currentCount+4:_connect_timer.currentCount;
 				
 				var curr_connect_obj:Object = _nc_types[curr_count-1];
 				if(!force_tunneling || (force_tunneling && curr_connect_obj.protocol == RTMPT) )
-					initializeConnection(curr_connect_obj.connection,curr_connect_obj.protocol,curr_connect_obj.port,connect_params);
+					initializeConnection(curr_connect_obj.connection,curr_connect_obj.protocol,curr_connect_obj.port,_connect_params);
 				
 				if(curr_count == _nc_types.length)
 				{
 					//all connection attempts have been tried
-					connect_timer.stop();
+					_connect_timer.stop();
 				}
 			});
 			
-			connect_timer.start();
+			_connect_timer.start();
 		}
 		
 		private function checkNetStatus(e:Event):void
@@ -385,8 +387,9 @@ package com.gearsandcogs.utils
 				if(!connected && curr_connection.connected)
 				{
 					acceptNc(curr_connection);
-					dispatchEvent(curr_connection.status);
+					handleNetStatus(curr_connection.status);
 					_is_connecting = false;
+					_was_connected = true;
 					return;
 				} else if(curr_connection.rejected)
 					rejected_connection = curr_connection;
@@ -396,12 +399,12 @@ package com.gearsandcogs.utils
 			//return the status of the last connection in the array
 			if(!connected && status_count == _nc_types.length)
 			{
-				if(!rejected_connection)
-					dispatchEvent(_nc_types[_nc_types.length-1].connection.status);
-				else
-					dispatchEvent(rejected_connection.status);
-				
 				_is_connecting = false;
+
+				if(!rejected_connection)
+					handleNetStatus(_nc_types[_nc_types.length-1].connection.status);
+				else
+					handleNetStatus(rejected_connection.status);
 			}
 		}
 		
@@ -430,6 +433,16 @@ package com.gearsandcogs.utils
 			if(debug) 
 				log(e.info.code);
 			dispatchEvent(e);
+			
+			if(auto_reconnect && _was_connected && (e.info.code == "NetConnection.Connect.Closed" || e.info.code == "NetConnection.Connect.Failed")
+				&& _reconnect_count<reconnect_count_limit)
+			{
+				if(debug)
+					log("attempting to reconnect");
+				
+				connect(_connect_string,_connect_params);
+				_reconnect_count++;
+			}
 		}
 		
 		private function handleSecurityError(e:SecurityErrorEvent):void
@@ -443,7 +456,6 @@ package com.gearsandcogs.utils
 		{
 			if(debug) 
 				trace("NetConnectionSmart: "+msg);
-			
 			dispatchEvent(new MsgEvent(MSG_EVT,false,false,msg));
 		}
 		
