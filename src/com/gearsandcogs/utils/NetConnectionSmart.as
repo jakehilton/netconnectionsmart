@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.3
+VERSION: 0.9.4
 DATE: 10/19/2012
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -86,7 +86,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT				:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.9.2";
+		public static const VERSION				:String = "NetConnectionSmart v 0.9.4";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
@@ -104,6 +104,7 @@ package com.gearsandcogs.utils
 		public var reconnect_count_limit		:uint = 10;
 
 		private var _connect_params				:Array;
+		private var _connect_params_init		:Array;
 		private var _nc_types					:Array;
 		
 		private var _is_connecting				:Boolean;
@@ -114,7 +115,7 @@ package com.gearsandcogs.utils
 		private var _nc							:PortConnection;
 		
 		private var _app_string					:String;
-		private var _connect_string				:String;
+		private var _connect_string_init		:String;
 		private var _encrypted_secure_string	:String;
 		private var _guid						:String;
 		private var _server_string				:String;
@@ -151,15 +152,15 @@ package com.gearsandcogs.utils
 				return;
 			
 			_is_connecting = true;
-			_connect_string = command.indexOf("://")>-1?command.substr(command.indexOf("://")+3):command;
-			if(!_connect_params)
-				_connect_params = append_guid?parameters.concat(_guid):parameters;
-			_server_string = _connect_string.substr(0,_connect_string.indexOf("/"));
-			_app_string = _connect_string.substr(_connect_string.indexOf("/"));
+			_connect_string_init = command.indexOf("://")>-1?command.substr(command.indexOf("://")+3):command;
+			_connect_params_init = parameters;
+			_connect_params = append_guid?parameters.concat(_guid):parameters;
+			_server_string = _connect_string_init.substr(0,_connect_string_init.indexOf("/"));
+			_app_string = _connect_string_init.substr(_connect_string_init.indexOf("/"));
 			_encrypted_secure_string = encrypted?"e":secure?"s":"";
 			
 			initPortConnections();
-			
+
 			if(shotgun_connect)
 			{
 				if(!force_tunneling){
@@ -458,7 +459,7 @@ package com.gearsandcogs.utils
 				if(debug)
 					log("attempting to reconnect");
 				
-				connect(_connect_string,_connect_params);
+				connect(_connect_string_init,_connect_params_init);
 				_reconnect_count++;
 			}
 		}
