@@ -15,20 +15,29 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.2
+VERSION: 0.9.3
 DATE: 10/19/2012
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
-Used to connect quickly through firewalls by trying a NetConnection via a shotgun connection approach or an incremental connection approach. 
-It does have a few properties like force_tunneling, encrypted, debug, connection_rate, and shotgun_connect that can be set before the connect call is made.
+A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port.
 
-force_tunneling: used if you don't ever want to attempt rtmp connections
-enctyped: used if you want to force the use of an encrypted connection (rtmp(t)e)
-debug: if you want to see debug messages via your trace panel
+Used to connect quickly through firewalls by trying a NetConnection via a shotgun connection approach or an incremental connection approach.
+
+Possible protocol attempts: rtmp,rtmpt,rtmpe,rtmpte,rtmps,rtmpts.
+
+It does have a few properties listed below that can be set before the connect call is made.
+
+append_guid: a boolean to enable a unique GUID be placed at the end of the parameters argument passed into the connect method. 
+This can be used to identify which connection requests are coming from the same client and that can be ignored if one is already being processed.
+auto_reconnect: a boolean to enable or dispable automatic reconnect attempts. By default this is set to false.
 connection_rate: only applicable if using a non-shotgun approach. Sets the rate that connections are tried. By default this is 200ms
+debug: if you want to see debug messages via your trace panel
+enctyped: used if you want to force the use of an encrypted connection (rtmp(t)e)
+force_tunneling: used if you don't ever want to attempt rtmp connections
+reconnect_count_limit: specify the max amount of reconnect attempts are made. Default is 10.
 shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled.
 
-It also has an event,MSG_EVT, that fires each time an event is updated.
+It has an event,MSG_EVT, that fires to notify the user of an event in the class.
 
 USAGE:
 It's a simple use case really.. just use it as you would the built in NetConnection class. Just specify rtmp as the protocol and let
@@ -82,13 +91,14 @@ package com.gearsandcogs.utils
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
 		
-		public var force_tunneling				:Boolean;
-		public var encrypted					:Boolean;
-		public var secure						:Boolean;
+		public var append_guid					:Boolean;
+		public var auto_reconnect				:Boolean;
 		public var default_port_only			:Boolean;
 		public var debug						:Boolean;
+		public var encrypted					:Boolean;
+		public var force_tunneling				:Boolean;
+		public var secure						:Boolean;
 		public var shotgun_connect				:Boolean = true;
-		public var auto_reconnect				:Boolean;
 		
 		public var connection_rate				:uint = 200;
 		public var reconnect_count_limit		:uint = 10;
@@ -106,6 +116,7 @@ package com.gearsandcogs.utils
 		private var _app_string					:String;
 		private var _connect_string				:String;
 		private var _encrypted_secure_string	:String;
+		private var _guid						:String;
 		private var _server_string				:String;
 		
 		private var _connect_timer				:Timer;
@@ -116,6 +127,7 @@ package com.gearsandcogs.utils
 		public function NetConnectionSmart()
 		{
 			_nc_client = new Object();
+			_guid = GUID.create();
 			initConnectionTypes();
 		}
 		
@@ -124,11 +136,6 @@ package com.gearsandcogs.utils
 		 *public method callable like the netconnection ones 
 		 * 
 		 */		
-		
-		public function get connection():NetConnection
-		{
-			return _nc;
-		}
 		
 		public function call(command:String,responder:Responder=null,...parameters):void
 		{
@@ -144,9 +151,9 @@ package com.gearsandcogs.utils
 				return;
 			
 			_is_connecting = true;
-			
 			_connect_string = command.indexOf("://")>-1?command.substr(command.indexOf("://")+3):command;
-			_connect_params = parameters;
+			if(!_connect_params)
+				_connect_params = append_guid?parameters.concat(_guid):parameters;
 			_server_string = _connect_string.substr(0,_connect_string.indexOf("/"));
 			_app_string = _connect_string.substr(_connect_string.indexOf("/"));
 			_encrypted_secure_string = encrypted?"e":secure?"s":"";
@@ -183,6 +190,11 @@ package com.gearsandcogs.utils
 			}
 		}
 		
+		public function set client(obj:Object):void
+		{
+			_nc_client = obj;
+		}
+		
 		public function get connected():Boolean
 		{
 			try{
@@ -192,15 +204,20 @@ package com.gearsandcogs.utils
 			return false;
 		}
 		
-		public function set client(obj:Object):void
+		public function get connection():NetConnection
 		{
-			_nc_client = obj;
+			return _nc;
 		}
 		
 		public function close():void
 		{
 			if(_nc)
 				_nc.close();
+		}
+		
+		public function get guid():String
+		{
+			return _guid;
 		}
 		
 		public function get objectEncoding():uint

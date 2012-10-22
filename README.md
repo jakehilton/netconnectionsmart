@@ -9,12 +9,14 @@ Possible protocol attempts: rtmp,rtmpt,rtmpe,rtmpte,rtmps,rtmpts.
 
 It does have a few properties listed below that can be set before the connect call is made.
 
+* append_guid: a boolean to enable a unique GUID be placed at the end of the parameters argument passed into the connect method. 
+This can be used to identify which connection requests are coming from the same client and can be ignored if a connection is already being processed. By default it is false.
 * auto_reconnect: a boolean to enable or dispable automatic reconnect attempts. By default this is set to false. 
 * connection_rate: only applicable if using a non-shotgun approach. Sets the rate that connections are tried. By default this is 200ms 
-* debug: if you want to see debug messages via your trace panel 
+* debug: if you want to see debug messages via your trace panel.
 * enctyped: used if you want to force the use of an encrypted connection (rtmp(t)e) 
 * force_tunneling: used if you don't ever want to attempt rtmp connections 
 * reconnect_count_limit: specify the max amount of reconnect attempts are made. Default is 10. 
 * shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled. 
 
-It also has an event,MSG_EVT, that fires to notify the user of an event in the class.
+It has an event,MSG_EVT, that fires to notify the user of an event in the class.
