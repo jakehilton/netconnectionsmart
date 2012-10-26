@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.5
+VERSION: 0.9.6
 DATE: 10/19/2012
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -86,7 +86,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT				:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.9.5";
+		public static const VERSION				:String = "NetConnectionSmart v 0.9.6";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
@@ -168,6 +168,9 @@ package com.gearsandcogs.utils
 			_server_string = _connect_string_init.substr(0,_connect_string_init.indexOf("/"));
 			_app_string = _connect_string_init.substr(_connect_string_init.indexOf("/"));
 			_encrypted_secure_string = encrypted?"e":secure?"s":"";
+			
+			if(_encrypted_secure_string=="s" && force_tunneling)
+				throw(new Error("Secure connections cannot run over rtmpt. Either turn off force tunnelling or the secure flag."));
 			
 			initPortConnections();
 
