@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.4
+VERSION: 0.9.5
 DATE: 10/19/2012
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -86,7 +86,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT				:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.9.4";
+		public static const VERSION				:String = "NetConnectionSmart v 0.9.5";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
@@ -152,7 +152,17 @@ package com.gearsandcogs.utils
 				return;
 			
 			_is_connecting = true;
+			
+			//strip rtmp variants
 			_connect_string_init = command.indexOf("://")>-1?command.substr(command.indexOf("://")+3):command;
+
+			//strip port declaration
+			if(_connect_string_init.indexOf(":")>-1)
+			{
+				var split_connect:Array = _connect_string_init.split(":");
+				_connect_string_init = split_connect[0]+split_connect[1].substr(split_connect[1].indexOf("/"));
+			}
+			
 			_connect_params_init = parameters;
 			_connect_params = append_guid?parameters.concat(_guid):parameters;
 			_server_string = _connect_string_init.substr(0,_connect_string_init.indexOf("/"));
@@ -178,7 +188,7 @@ package com.gearsandcogs.utils
 					if(!connected){
 						for(var i:String in _nc_types)
 						{
-							if(_nc_types[i].protocol == RTMPT)
+							if(_nc_types[i].protocol == RTMPT && _encrypted_secure_string!="s")
 							{
 								initializeConnection(_nc_types[i].connection,_nc_types[i].protocol,_nc_types[i].port,_connect_params);
 							}
