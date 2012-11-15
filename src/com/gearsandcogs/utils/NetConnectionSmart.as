@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.6
+VERSION: 0.9.7
 DATE: 10/19/2012
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -86,7 +86,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT				:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.9.6";
+		public static const VERSION				:String = "NetConnectionSmart v 0.9.7";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
@@ -163,6 +163,10 @@ package com.gearsandcogs.utils
 				_connect_string_init = split_connect[0]+split_connect[1].substr(split_connect[1].indexOf("/"));
 			}
 			
+			//setting very low connection rate but helps to avoid race conditions serverside
+			if(shotgun_connect)
+				connection_rate = 100;
+			
 			_connect_params_init = parameters;
 			_connect_params = append_guid?parameters.concat(_guid):parameters;
 			_server_string = _connect_string_init.substr(0,_connect_string_init.indexOf("/"));
@@ -173,35 +177,7 @@ package com.gearsandcogs.utils
 				throw(new Error("Secure connections cannot run over rtmpt. Either turn off force tunnelling or the secure flag."));
 			
 			initPortConnections();
-
-			if(shotgun_connect)
-			{
-				if(!force_tunneling){
-					for(var i:String in _nc_types){
-						if(_nc_types[i].protocol == RTMP)
-						{
-							initializeConnection(_nc_types[i].connection,_nc_types[i].protocol,_nc_types[i].port,_connect_params);
-						}
-					}
-				}
-				
-				//delay rtmpt attempts by 1 second unless tunneling 
-				setTimeout(function():void
-				{
-					if(!connected){
-						for(var i:String in _nc_types)
-						{
-							if(_nc_types[i].protocol == RTMPT && _encrypted_secure_string!="s")
-							{
-								initializeConnection(_nc_types[i].connection,_nc_types[i].protocol,_nc_types[i].port,_connect_params);
-							}
-						}
-						
-					}
-				},force_tunneling?10:1000);
-			} else {
-				initializeTimers();
-			}
+			initializeTimers();
 		}
 		
 		public function set client(obj:Object):void
@@ -377,7 +353,7 @@ package com.gearsandcogs.utils
 		private function initializeTimers():void
 		{
 			if(debug)
-				log("Shotgun disabled. Connecting sequentially at a rate of: "+connection_rate);
+				log("Connecting sequentially at a rate of: "+connection_rate);
 			
 			_connect_timer = new Timer(connection_rate);
 			_connect_timer.addEventListener(TimerEvent.TIMER,function(e:TimerEvent):void
@@ -423,12 +399,12 @@ package com.gearsandcogs.utils
 					_was_connected = true;
 					_reconnect_count = 0;
 					return;
-				} else if(curr_connection.rejected)
+				} else if(!rejected_connection && curr_connection.rejected)
 					rejected_connection = curr_connection;
 			}
 			
 			//if no success at all return the first rejected message or
-			//return the status of the last connection in the array
+			//return the status of the first connection in the array
 			if(!connected && status_count == _nc_types.length)
 			{
 				_is_connecting = false;
