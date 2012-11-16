@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.7
+VERSION: 0.9.8
 DATE: 10/19/2012
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -27,8 +27,9 @@ Possible protocol attempts: rtmp,rtmpt,rtmpe,rtmpte,rtmps,rtmpts.
 
 It does have a few properties listed below that can be set before the connect call is made.
 
-append_guid: a boolean to enable a unique GUID be placed at the end of the parameters argument passed into the connect method. 
+append_guid: a boolean to enable a unique GUID be placed at the end of the parameters argument passed into the connect method.  
 This can be used to identify which connection requests are coming from the same client and that can be ignored if one is already being processed.
+recreate_guid: a boolean to enable the recreation of the GUID each time the main connect method is called. By default this is false.
 auto_reconnect: a boolean to enable or dispable automatic reconnect attempts. By default this is set to false.
 connection_rate: only applicable if using a non-shotgun approach. Sets the rate that connections are tried. By default this is 200ms
 debug: if you want to see debug messages via your trace panel
@@ -86,7 +87,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT				:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.9.7";
+		public static const VERSION				:String = "NetConnectionSmart v 0.9.8";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
@@ -97,6 +98,7 @@ package com.gearsandcogs.utils
 		public var debug						:Boolean;
 		public var encrypted					:Boolean;
 		public var force_tunneling				:Boolean;
+		public var recreate_guid				:Boolean;
 		public var secure						:Boolean;
 		public var shotgun_connect				:Boolean = true;
 		
@@ -128,7 +130,6 @@ package com.gearsandcogs.utils
 		public function NetConnectionSmart()
 		{
 			_nc_client = new Object();
-			_guid = GUID.create();
 			initConnectionTypes();
 		}
 		
@@ -166,6 +167,10 @@ package com.gearsandcogs.utils
 			//setting very low connection rate but helps to avoid race conditions serverside
 			if(shotgun_connect)
 				connection_rate = 100;
+			
+			//create new guid
+			if(!_guid || recreate_guid)
+				_guid = GUID.create();
 			
 			_connect_params_init = parameters;
 			_connect_params = append_guid?parameters.concat(_guid):parameters;
