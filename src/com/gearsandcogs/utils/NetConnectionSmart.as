@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.8
+VERSION: 0.9.9
 DATE: 10/19/2012
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -82,12 +82,11 @@ package com.gearsandcogs.utils
 	import flash.net.ObjectEncoding;
 	import flash.net.Responder;
 	import flash.utils.Timer;
-	import flash.utils.setTimeout;
 	
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT				:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.9.8";
+		public static const VERSION				:String = "NetConnectionSmart v 0.9.9";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
@@ -235,6 +234,11 @@ package com.gearsandcogs.utils
 		public function get proxyType():String
 		{
 			return _nc.proxyType;
+		}
+		
+		public function set proxyType(type:String):void
+		{
+			_nc.proxyType = type;
 		}
 		
 		public function get connectedProxyType():String
