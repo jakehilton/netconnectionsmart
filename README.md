@@ -5,7 +5,7 @@ A replacement class for the standard NetConnection actionscript class. This easi
 
 Used to connect quickly through firewalls by trying a NetConnection via a shotgun connection approach or an incremental connection approach.
 
-Possible protocol attempts: rtmp,rtmpt,rtmpe,rtmpte,rtmps,rtmpts.
+Possible protocol attempts: rtmp,rtmpt,rtmpe,rtmpte,rtmps.
 
 It does have a few properties listed below that can be set before the connect call is made.
 
