@@ -119,6 +119,7 @@ package com.gearsandcogs.utils
 		private var _connect_string_init		:String;
 		private var _encrypted_secure_string	:String;
 		private var _guid						:String;
+		private var _proxy_type					:String;
 		private var _server_string				:String;
 		
 		private var _connect_timer				:Timer;
@@ -238,7 +239,7 @@ package com.gearsandcogs.utils
 		
 		public function set proxyType(type:String):void
 		{
-			_nc.proxyType = type;
+			_proxy_type = type;
 		}
 		
 		public function get connectedProxyType():String
@@ -349,6 +350,7 @@ package com.gearsandcogs.utils
 				var port_label:String = encrypted_secure_identifier+_nc_types[i].protocol+" "+_nc_types[i].port;
 				var curr_pc:PortConnection = new PortConnection(parseInt(i),port_label,debug);
 				curr_pc.objectEncoding = _object_encoding;
+				curr_pc.proxyType = _proxy_type;
 				
 				if(force_tunneling && _nc_types[i].protocol == RTMP)
 					curr_pc.status = new NetStatusEvent("skipped");
