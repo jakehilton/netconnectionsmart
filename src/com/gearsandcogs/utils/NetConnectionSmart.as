@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.9
+VERSION: 0.9.10
 DATE: 10/19/2012
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -86,7 +86,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT				:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.9.9";
+		public static const VERSION				:String = "NetConnectionSmart v 0.9.10";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
@@ -119,7 +119,7 @@ package com.gearsandcogs.utils
 		private var _connect_string_init		:String;
 		private var _encrypted_secure_string	:String;
 		private var _guid						:String;
-		private var _proxy_type					:String;
+		private var _proxy_type					:String = "none";
 		private var _server_string				:String;
 		
 		private var _connect_timer				:Timer;
