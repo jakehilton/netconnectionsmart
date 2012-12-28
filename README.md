@@ -19,5 +19,6 @@ This can be used to identify which connection requests are coming from the same 
 * force_tunneling: used if you don't ever want to attempt rtmp connections 
 * reconnect_count_limit: specify the max amount of reconnect attempts are made. Default is 10. 
 * shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled. 
+* portArray: an array containing ports in the order they should be tried. By default is it [443,80,1935]
 
 It has an event,MSG_EVT, that fires to notify the user of an event in the class.

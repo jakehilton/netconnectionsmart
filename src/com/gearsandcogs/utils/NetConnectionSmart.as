@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.10
-DATE: 10/19/2012
+VERSION: 0.9.11
+DATE: 12/28/2012
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
 A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port.
@@ -37,6 +37,7 @@ enctyped: used if you want to force the use of an encrypted connection (rtmp(t)e
 force_tunneling: used if you don't ever want to attempt rtmp connections
 reconnect_count_limit: specify the max amount of reconnect attempts are made. Default is 10.
 shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled.
+portArray: an array containing ports in the order they should be tried. By default is it [443,80,1935]
 
 It has an event,MSG_EVT, that fires to notify the user of an event in the class.
 
@@ -86,11 +87,12 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT				:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.9.10";
+		public static const VERSION				:String = "NetConnectionSmart v 0.9.11";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
 		
+
 		public var append_guid					:Boolean;
 		public var auto_reconnect				:Boolean;
 		public var default_port_only			:Boolean;
@@ -107,6 +109,7 @@ package com.gearsandcogs.utils
 		private var _connect_params				:Array;
 		private var _connect_params_init		:Array;
 		private var _nc_types					:Array;
+		private var _portArray					:Array = [443,80,1935];
 		
 		private var _is_connecting				:Boolean;
 		private var _was_connected				:Boolean;
@@ -257,6 +260,17 @@ package com.gearsandcogs.utils
 			return _nc.usingTLS;
 		}
 		
+		public function get portArray():Array
+		{
+			return _portArray;
+		}
+		
+		public function set portArray(portArray:Array):void
+		{
+			_portArray = portArray;
+			initConnectionTypes();
+		}
+		
 		/**
 		 * 
 		 * private methods used to push things up the stack for listeners
@@ -333,13 +347,11 @@ package com.gearsandcogs.utils
 		private function initConnectionTypes():void
 		{
 			_nc_types = new Array();
-			_nc_types.push({protocol:RTMP,port:"443"});
-			_nc_types.push({protocol:RTMP,port:"1935"});
-			_nc_types.push({protocol:RTMP,port:"80"});
 			
-			_nc_types.push({protocol:RTMPT,port:"443"});
-			_nc_types.push({protocol:RTMPT,port:"80"});
-			_nc_types.push({protocol:RTMPT,port:"1935"});
+			for each(var r:String in _portArray)
+				_nc_types.push({protocol:RTMP,port:r});
+			for each(var rt:String in _portArray)
+				_nc_types.push({protocol:RTMPT,port:rt});
 		}
 		
 		private function initPortConnections():void
