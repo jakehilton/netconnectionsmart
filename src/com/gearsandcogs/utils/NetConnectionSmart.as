@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.11
-DATE: 12/28/2012
+VERSION: 0.9.12
+DATE: 1/11/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
 A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port.
@@ -87,12 +87,11 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT				:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.9.11";
+		public static const VERSION				:String = "NetConnectionSmart v 0.9.12";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
 		
-
 		public var append_guid					:Boolean;
 		public var auto_reconnect				:Boolean;
 		public var default_port_only			:Boolean;
@@ -209,8 +208,11 @@ package com.gearsandcogs.utils
 		
 		public function close():void
 		{
-			if(_nc)
-				_nc.close();
+			if(!_nc)
+				return;
+			
+			_was_connected = false;
+			_nc.close();
 		}
 		
 		public function get guid():String
