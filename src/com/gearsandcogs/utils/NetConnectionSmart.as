@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.12
-DATE: 1/11/2013
+VERSION: 0.9.13
+DATE: 1/16/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
 A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port.
@@ -87,7 +87,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT				:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.9.12";
+		public static const VERSION				:String = "NetConnectionSmart v 0.9.13";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
@@ -473,7 +473,7 @@ package com.gearsandcogs.utils
 				if(debug)
 					log("attempting to reconnect");
 				
-				connect(_connect_string_init,_connect_params_init);
+				connect.apply(null,[_connect_string_init].concat(_connect_params_init));
 				_reconnect_count++;
 			}
 		}
