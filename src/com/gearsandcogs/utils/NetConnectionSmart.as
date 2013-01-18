@@ -41,6 +41,8 @@ portArray: an array containing ports in the order they should be tried. By defau
 
 It has an event,MSG_EVT, that fires to notify the user of an event in the class.
 
+If you are experiencing issues with proxies you can try setting the proxyType="best" as this will attempt to use a different connect method if normal attempts fail.
+
 USAGE:
 It's a simple use case really.. just use it as you would the built in NetConnection class. Just specify rtmp as the protocol and let
 the class handle the rest whether to use rtmpt or rtmp. In the case of encrypted still only pass in rtmp and it will resolve to rtmpe or rtmpte.

@@ -22,3 +22,5 @@ This can be used to identify which connection requests are coming from the same 
 * portArray: an array containing ports in the order they should be tried. By default is it [443,80,1935]
 
 It has an event,MSG_EVT, that fires to notify the user of an event in the class.
+
+If you are experiencing issues with proxies you can try setting the proxyType="best" as this will attempt to use a different connect method if normal attempts fail.
