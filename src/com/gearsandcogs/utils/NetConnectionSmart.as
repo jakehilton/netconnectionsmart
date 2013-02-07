@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.13
-DATE: 1/16/2013
+VERSION: 0.9.14
+DATE: 2/7/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
 A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port.
@@ -89,7 +89,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT				:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.9.13";
+		public static const VERSION				:String = "NetConnectionSmart v 0.9.14";
 		
 		private static const RTMP				:String = "rtmp";
 		private static const RTMPT				:String = "rtmpt";
@@ -159,13 +159,13 @@ package com.gearsandcogs.utils
 			_is_connecting = true;
 			
 			//strip rtmp variants
-			_connect_string_init = command.indexOf("://")>-1?command.substr(command.indexOf("://")+3):command;
+			_connect_string_init = command.indexOf("://")>-1?command.substring(command.indexOf("://")+3):command;
 
 			//strip port declaration
 			if(_connect_string_init.indexOf(":")>-1)
 			{
 				var split_connect:Array = _connect_string_init.split(":");
-				_connect_string_init = split_connect[0]+split_connect[1].substr(split_connect[1].indexOf("/"));
+				_connect_string_init = split_connect[0]+split_connect[1].substring(split_connect[1].indexOf("/"));
 			}
 			
 			//setting very low connection rate but helps to avoid race conditions serverside
@@ -178,9 +178,12 @@ package com.gearsandcogs.utils
 			
 			_connect_params_init = parameters;
 			_connect_params = append_guid?parameters.concat(_guid):parameters;
-			_server_string = _connect_string_init.substr(0,_connect_string_init.indexOf("/"));
-			_app_string = _connect_string_init.substr(_connect_string_init.indexOf("/"));
+			_server_string = _connect_string_init.substring(0,_connect_string_init.indexOf("/"));
+			_app_string = _connect_string_init.substring(_connect_string_init.indexOf("/"));
 			_encrypted_secure_string = encrypted?"e":secure?"s":"";
+			
+			if(_server_string == "" || _app_string.length<2)
+				throw(new Error("Invalid application path. Need server and application name"));
 			
 			if(_encrypted_secure_string=="s" && force_tunneling)
 				throw(new Error("Secure connections cannot run over rtmpt. Either turn off force tunnelling or the secure flag."));
@@ -236,7 +239,7 @@ package com.gearsandcogs.utils
 		
 		public function get protocol():String
 		{
-			return _nc.uri.substr(0,_nc.uri.indexOf("://"));
+			return _nc.uri.substring(0,_nc.uri.indexOf("://"));
 		}
 		
 		public function get proxyType():String
@@ -557,7 +560,7 @@ class PortConnection extends NetConnection
 	
 	public function getProtocol():String
 	{
-		return uri.substr(0,uri.indexOf("://"));
+		return uri.substring(0,uri.indexOf("://"));
 	}
 	
 	public function get rejected():Boolean
