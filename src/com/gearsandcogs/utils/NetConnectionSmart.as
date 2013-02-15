@@ -88,48 +88,56 @@ package com.gearsandcogs.utils
 	
 	public class NetConnectionSmart extends EventDispatcher
 	{
-		public static const MSG_EVT				:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION				:String = "NetConnectionSmart v 0.9.14";
+		public static const MSG_EVT								:String = "NetConnectionSmartMsgEvent";
+		public static const VERSION								:String = "NetConnectionSmart v 0.9.14d";
 		
-		private static const RTMP				:String = "rtmp";
-		private static const RTMPT				:String = "rtmpt";
+		public static const NETCONNECTION_CONNECT_CLOSED		:String = "NetConnection.Connect.Closed";
+		public static const NETCONNECTION_CONNECT_FAILED		:String = "NetConnection.Connect.Failed";
+		public static const NETCONNECTION_CONNECT_REJECTED		:String = "NetConnection.Connect.Rejected";
+		public static const NETCONNECTION_CONNECT_SUCCESS		:String = "NetConnection.Connect.Success";
 		
-		public var append_guid					:Boolean;
-		public var auto_reconnect				:Boolean;
-		public var default_port_only			:Boolean;
-		public var debug						:Boolean;
-		public var encrypted					:Boolean;
-		public var force_tunneling				:Boolean;
-		public var recreate_guid				:Boolean;
-		public var secure						:Boolean;
-		public var shotgun_connect				:Boolean = true;
+		public static const NETCONNECTION_RECONNECT_FAILED		:String = "NetConnection.Reconnect.Failed";
+		public static const NETCONNECTION_RECONNECT_INIT		:String = "NetConnection.Reconnect.Init";
 		
-		public var connection_rate				:uint = 200;
-		public var reconnect_count_limit		:uint = 10;
+		private static const RTMP								:String = "rtmp";
+		private static const RTMPT								:String = "rtmpt";
+		
+		public var append_guid									:Boolean;
+		public var auto_reconnect								:Boolean;
+		public var default_port_only							:Boolean;
+		public var debug										:Boolean;
+		public var encrypted									:Boolean;
+		public var force_tunneling								:Boolean;
+		public var recreate_guid								:Boolean;
+		public var secure										:Boolean;
+		public var shotgun_connect								:Boolean = true;
+		
+		public var connection_rate								:uint = 200;
+		public var reconnect_count_limit						:uint = 10;
 
-		private var _connect_params				:Array;
-		private var _connect_params_init		:Array;
-		private var _nc_types					:Array;
-		private var _portArray					:Array = [443,80,1935];
+		private var _connect_params								:Array;
+		private var _connect_params_init						:Array;
+		private var _nc_types									:Array;
+		private var _portArray									:Array = [443,80,1935];
 		
-		private var _is_connecting				:Boolean;
-		private var _was_connected				:Boolean;
+		private var _is_connecting								:Boolean;
+		private var _was_connected								:Boolean;
 		
-		private var _nc_client					:Object;
+		private var _nc_client									:Object;
 		
-		private var _nc							:PortConnection;
+		private var _nc											:PortConnection;
 		
-		private var _app_string					:String;
-		private var _connect_string_init		:String;
-		private var _encrypted_secure_string	:String;
-		private var _guid						:String;
-		private var _proxy_type					:String = "none";
-		private var _server_string				:String;
+		private var _app_string									:String;
+		private var _connect_string_init						:String;
+		private var _encrypted_secure_string					:String;
+		private var _guid										:String;
+		private var _proxy_type									:String = "none";
+		private var _server_string								:String;
 		
-		private var _connect_timer				:Timer;
+		private var _connect_timer								:Timer;
 		
-		private var _object_encoding			:uint = ObjectEncoding.AMF3;
-		private var _reconnect_count			:uint;
+		private var _object_encoding							:uint = ObjectEncoding.AMF3;
+		private var _reconnect_count							:uint;
 		
 		public function NetConnectionSmart()
 		{
@@ -139,7 +147,7 @@ package com.gearsandcogs.utils
 		
 		/**
 		 * 
-		 *public method callable like the netconnection ones 
+		 *public method callable like the netconnection ones
 		 * 
 		 */		
 		
@@ -470,17 +478,31 @@ package com.gearsandcogs.utils
 		{
 			if(debug) 
 				log(e.info.code);
+			
 			dispatchEvent(e);
 			
-			if(auto_reconnect && _was_connected && (e.info.code == "NetConnection.Connect.Closed" || e.info.code == "NetConnection.Connect.Failed")
-				&& _reconnect_count<reconnect_count_limit)
+			if(!auto_reconnect || !_was_connected || (e.info.code != "NetConnection.Connect.Closed" && e.info.code != "NetConnection.Connect.Failed"))
+				return;
+			
+			if(_reconnect_count<reconnect_count_limit)
 			{
 				if(debug)
 					log("attempting to reconnect");
 				
+				e.info.code = NETCONNECTION_RECONNECT_INIT;
+				e.info.level = "status";
 				connect.apply(null,[_connect_string_init].concat(_connect_params_init));
 				_reconnect_count++;
+			} 
+			else
+			{
+				if(debug)
+					log("reconnect limit reached");
+				
+				e.info.code = NETCONNECTION_RECONNECT_FAILED;
+				_reconnect_count = 0;
 			}
+			dispatchEvent(e);
 		}
 		
 		private function handleSecurityError(e:SecurityErrorEvent):void
