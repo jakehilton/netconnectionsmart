@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.15
-DATE: 2/15/2013
+VERSION: 0.9.16
+DATE: 2/28/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
 A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port.
@@ -117,7 +117,7 @@ package com.gearsandcogs.utils
 
 		private var _connect_params								:Array;
 		private var _connect_params_init						:Array;
-		private var _nc_types									:Array;
+		private var _ncTypes									:Vector.<NetConnectionType>;
 		private var _portArray									:Array = [443,80,1935];
 		
 		private var _is_connecting								:Boolean;
@@ -316,8 +316,8 @@ package com.gearsandcogs.utils
 		
 		private function closeExtraNc():void
 		{
-			for each(var n:Object in _nc_types){
-				var portConnection:PortConnection = n.connection as PortConnection;
+			for each(var n:NetConnectionType in _ncTypes){
+				var portConnection:PortConnection = n.connection;
 				if(portConnection && portConnection != _nc)
 					closeDownNc(portConnection);
 			}
@@ -361,30 +361,32 @@ package com.gearsandcogs.utils
 		
 		private function initConnectionTypes():void
 		{
-			_nc_types = new Array();
-			
+			_ncTypes = new Vector.<NetConnectionType>();
 			for each(var r:String in _portArray)
-				_nc_types.push({protocol:RTMP,port:r});
-			for each(var rt:String in _portArray)
-				_nc_types.push({protocol:RTMPT,port:rt});
+			{
+				_ncTypes.unshift(new NetConnectionType(RTMP,r));
+				_ncTypes.push(new NetConnectionType(RTMPT,r))
+			}
 		}
 		
 		private function initPortConnections():void
 		{
 			var encrypted_secure_identifier:String = encrypted?"Encrypted/Secure ":" "; 
-			for(var i:String in _nc_types)
+			for(var i:String in _ncTypes)
 			{
-				var port_label:String = encrypted_secure_identifier+_nc_types[i].protocol+" "+_nc_types[i].port;
+				var curr_nct:NetConnectionType = _ncTypes[i];
+				var port_label:String = encrypted_secure_identifier+curr_nct.protocol+" "+curr_nct.port;
 				var curr_pc:PortConnection = new PortConnection(parseInt(i),port_label,debug);
+				
 				curr_pc.objectEncoding = _object_encoding;
 				curr_pc.proxyType = _proxy_type;
 				
-				if(force_tunneling && _nc_types[i].protocol == RTMP)
+				if( (force_tunneling && curr_nct.protocol == RTMP) || (secure && curr_nct.protocol == RTMPT) )
 					curr_pc.status = new NetStatusEvent("skipped");
 				
 				curr_pc.client = _nc_client;
 				curr_pc.addEventListener(PortConnection.STATUS_UPDATE,checkNetStatus);
-				_nc_types[i].connection = curr_pc;
+				curr_nct.connection = curr_pc;
 			}
 		}
 		
@@ -396,17 +398,15 @@ package com.gearsandcogs.utils
 			_connect_timer = new Timer(connection_rate);
 			_connect_timer.addEventListener(TimerEvent.TIMER,function(e:TimerEvent):void
 			{
-				var curr_count:uint = force_tunneling?_connect_timer.currentCount+4:_connect_timer.currentCount;
+				var curr_count:uint = force_tunneling?_connect_timer.currentCount+portArray.length:_connect_timer.currentCount;
+				var curr_connect_obj:NetConnectionType = _ncTypes[curr_count-1];
 				
-				var curr_connect_obj:Object = _nc_types[curr_count-1];
-				if(!force_tunneling || (force_tunneling && curr_connect_obj.protocol == RTMPT) )
+				if(!curr_connect_obj.connection.status || curr_connect_obj.connection.status.type != "skipped")
 					initializeConnection(curr_connect_obj.connection,curr_connect_obj.protocol,curr_connect_obj.port,_connect_params);
 				
-				if(curr_count == _nc_types.length)
-				{
-					//all connection attempts have been tried
+				//all connection attempts have been tried
+				if(curr_count == _ncTypes.length)
 					_connect_timer.stop();
-				}
 			});
 			
 			_connect_timer.start();
@@ -422,9 +422,9 @@ package com.gearsandcogs.utils
 			var status_count:uint;
 			var rejected_connection:PortConnection;
 			
-			for each(var i:Object in _nc_types)
+			for each(var i:NetConnectionType in _ncTypes)
 			{
-				var curr_connection:PortConnection = i.connection as PortConnection;
+				var curr_connection:PortConnection = i.connection;
 				
 				if(curr_connection.status)
 					status_count++;
@@ -443,12 +443,12 @@ package com.gearsandcogs.utils
 			
 			//if no success at all return the first rejected message or
 			//return the status of the first connection in the array
-			if(!connected && status_count == _nc_types.length)
+			if(!connected && status_count == _ncTypes.length)
 			{
 				_is_connecting = false;
 
 				if(!rejected_connection)
-					handleNetStatus(_nc_types[_nc_types.length-1].connection.status);
+					handleNetStatus(_ncTypes[_ncTypes.length-1].connection.status);
 				else
 					handleNetStatus(rejected_connection.status);
 			}
@@ -476,7 +476,7 @@ package com.gearsandcogs.utils
 		
 		private function handleNetStatus(e:NetStatusEvent):void
 		{
-			if(debug) 
+			if(debug && e.info && e.info.code) 
 				log(e.info.code);
 			
 			dispatchEvent(e);
@@ -592,5 +592,18 @@ class PortConnection extends NetConnection
 		}catch(e:Error){}
 		
 		return false;
+	}
+}
+
+class NetConnectionType
+{
+	public var connection		:PortConnection;
+	public var port				:String;
+	public var protocol			:String;
+	
+	public function NetConnectionType(protocol:String, port:String)
+	{
+		this.port = port;
+		this.protocol = protocol;
 	}
 }
