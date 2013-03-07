@@ -18,9 +18,12 @@ This can be used to identify which connection requests are coming from the same 
 * enctyped: used if you want to force the use of an encrypted connection (rtmp(t)e) 
 * force_tunneling: used if you don't ever want to attempt rtmp connections 
 * reconnect_count_limit: specify the max amount of reconnect attempts are made. Default is 10. 
+* sequential_connect: a boolean to enable or disable the sequential connect approach. By default it is disabled. This will try a connection one at a time and wait for a failure prior to trying the next type in the sequence. 
 * shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled. 
 * portArray: an array containing ports in the order they should be tried. By default is it [443,80,1935]
 
 It has an event,MSG_EVT, that fires to notify the user of an event in the class.
 
 If you are experiencing issues with proxies you can try setting the proxyType="best" as this will attempt to use a different connect method if normal attempts fail.
+
+If you are using this in a mobile IOS Air project I would highly suggest enabling sequential_connect.

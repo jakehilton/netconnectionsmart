@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.16
+VERSION: 0.9.17
 DATE: 2/28/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -89,7 +89,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT								:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION								:String = "NetConnectionSmart v 0.9.15";
+		public static const VERSION								:String = "NetConnectionSmart v 0.9.17";
 		
 		public static const NETCONNECTION_CONNECT_CLOSED		:String = "NetConnection.Connect.Closed";
 		public static const NETCONNECTION_CONNECT_FAILED		:String = "NetConnection.Connect.Failed";
@@ -110,6 +110,7 @@ package com.gearsandcogs.utils
 		public var force_tunneling								:Boolean;
 		public var recreate_guid								:Boolean;
 		public var secure										:Boolean;
+		public var sequential_connect							:Boolean;
 		public var shotgun_connect								:Boolean = true;
 		
 		public var connection_rate								:uint = 200;
@@ -136,6 +137,7 @@ package com.gearsandcogs.utils
 		
 		private var _connect_timer								:Timer;
 		
+		private var _connection_attempt_count					:uint;
 		private var _object_encoding							:uint = ObjectEncoding.AMF3;
 		private var _reconnect_count							:uint;
 		
@@ -147,8 +149,8 @@ package com.gearsandcogs.utils
 		
 		/**
 		 * 
-		 *public method callable like the netconnection ones
-		 * 
+		 *public functions callable like the netconnection ones
+		 *
 		 */		
 		
 		public function call(command:String,responder:Responder=null,...parameters):void
@@ -196,8 +198,10 @@ package com.gearsandcogs.utils
 			if(_encrypted_secure_string=="s" && force_tunneling)
 				throw(new Error("Secure connections cannot run over rtmpt. Either turn off force tunnelling or the secure flag."));
 			
-			initPortConnections();
-			initializeTimers();
+			if(sequential_connect)
+				initConnection();
+			else
+				initializeTimers();
 		}
 		
 		public function set client(obj:Object):void
@@ -226,6 +230,9 @@ package com.gearsandcogs.utils
 			
 			_was_connected = false;
 			_nc.close();
+			
+			_nc = null;
+			closeExtraNc();
 		}
 		
 		public function get guid():String
@@ -319,14 +326,17 @@ package com.gearsandcogs.utils
 			for each(var n:NetConnectionType in _ncTypes){
 				var portConnection:PortConnection = n.connection;
 				if(portConnection && portConnection != _nc)
+				{
 					closeDownNc(portConnection);
+					n.connection = null;
+				}
 			}
 		}
 		
 		private function closeDownNc(pc:PortConnection):void
 		{
 			if(debug)
-				trace("Closing down NetConnection: "+pc.label);
+				log("Closing down NetConnection: "+pc.label);
 			
 			pc.removeEventListener(PortConnection.STATUS_UPDATE,checkNetStatus);
 			pc.addEventListener(NetStatusEvent.NET_STATUS,nullHandleNetStatus);
@@ -345,7 +355,7 @@ package com.gearsandcogs.utils
 		 * 
 		 */		
 		
-		private function initializeConnection(connection:NetConnection,protocol:String,port:String, parameters:Array):void
+		private function processConnection(connection:NetConnection,protocol:String,port:String, parameters:Array):void
 		{
 			if(default_port_only && port != "default")
 				return;
@@ -369,47 +379,52 @@ package com.gearsandcogs.utils
 			}
 		}
 		
-		private function initPortConnections():void
+		private function initPortConnection(nc_num:uint):NetConnectionType
 		{
-			var encrypted_secure_identifier:String = encrypted?"Encrypted/Secure ":" "; 
-			for(var i:String in _ncTypes)
-			{
-				var curr_nct:NetConnectionType = _ncTypes[i];
-				var port_label:String = encrypted_secure_identifier+curr_nct.protocol+" "+curr_nct.port;
-				var curr_pc:PortConnection = new PortConnection(parseInt(i),port_label,debug);
-				
-				curr_pc.objectEncoding = _object_encoding;
-				curr_pc.proxyType = _proxy_type;
-				
-				if( (force_tunneling && curr_nct.protocol == RTMP) || (secure && curr_nct.protocol == RTMPT) )
-					curr_pc.status = new NetStatusEvent("skipped");
-				
-				curr_pc.client = _nc_client;
-				curr_pc.addEventListener(PortConnection.STATUS_UPDATE,checkNetStatus);
-				curr_nct.connection = curr_pc;
-			}
+			var encrypted_secure_identifier:String = encrypted?"Encrypted/Secure ":" ";
+			
+			var curr_nct:NetConnectionType = _ncTypes[nc_num];
+			var port_label:String = encrypted_secure_identifier+curr_nct.protocol+" "+curr_nct.port;
+			var curr_pc:PortConnection = new PortConnection(nc_num,port_label,debug);
+			
+			curr_pc.objectEncoding = _object_encoding;
+			curr_pc.proxyType = _proxy_type;
+			
+			if( (force_tunneling && curr_nct.protocol == RTMP) || (secure && curr_nct.protocol == RTMPT) )
+				curr_pc.status = new NetStatusEvent("skipped");
+			
+			curr_pc.client = _nc_client;
+			curr_pc.addEventListener(PortConnection.STATUS_UPDATE,checkNetStatus);
+			curr_nct.connection = curr_pc;
+			
+			return curr_nct;
 		}
 		
 		private function initializeTimers():void
 		{
 			if(debug)
-				log("Connecting sequentially at a rate of: "+connection_rate);
+				log("Connecting at a rate of: "+connection_rate);
 			
 			_connect_timer = new Timer(connection_rate);
 			_connect_timer.addEventListener(TimerEvent.TIMER,function(e:TimerEvent):void
 			{
-				var curr_count:uint = force_tunneling?_connect_timer.currentCount+portArray.length:_connect_timer.currentCount;
-				var curr_connect_obj:NetConnectionType = _ncTypes[curr_count-1];
-				
-				if(!curr_connect_obj.connection.status || curr_connect_obj.connection.status.type != "skipped")
-					initializeConnection(curr_connect_obj.connection,curr_connect_obj.protocol,curr_connect_obj.port,_connect_params);
-				
-				//all connection attempts have been tried
-				if(curr_count == _ncTypes.length)
-					_connect_timer.stop();
+				initConnection(_connect_timer.currentCount-1);
 			});
 			
 			_connect_timer.start();
+		}
+		
+		private function initConnection(connect_count:uint=0):void
+		{
+			_connection_attempt_count = force_tunneling?connect_count+portArray.length:connect_count;
+			var curr_nct:NetConnectionType = initPortConnection(_connection_attempt_count);
+			
+			if(!curr_nct.connection.status || curr_nct.connection.status.type != "skipped")
+				processConnection(curr_nct.connection,curr_nct.protocol,curr_nct.port,_connect_params);
+			
+			//all connection attempts have been tried
+			if(_connect_timer && _connection_attempt_count == _ncTypes.length-1)
+				_connect_timer.stop();
 		}
 		
 		private function checkNetStatus(e:Event):void
@@ -426,6 +441,9 @@ package com.gearsandcogs.utils
 			{
 				var curr_connection:PortConnection = i.connection;
 				
+				if(!curr_connection)
+					continue;
+				
 				if(curr_connection.status)
 					status_count++;
 				
@@ -436,6 +454,7 @@ package com.gearsandcogs.utils
 					_is_connecting = false;
 					_was_connected = true;
 					_reconnect_count = 0;
+					_connection_attempt_count = 0;
 					return;
 				} else if(!rejected_connection && curr_connection.rejected)
 					rejected_connection = curr_connection;
@@ -451,6 +470,9 @@ package com.gearsandcogs.utils
 					handleNetStatus(_ncTypes[_ncTypes.length-1].connection.status);
 				else
 					handleNetStatus(rejected_connection.status);
+			} else if(sequential_connect)
+			{
+				initConnection(++_connection_attempt_count);
 			}
 		}
 		
