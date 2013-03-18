@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.17
+VERSION: 0.9.18
 DATE: 2/28/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -89,7 +89,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT								:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION								:String = "NetConnectionSmart v 0.9.17";
+		public static const VERSION								:String = "NetConnectionSmart v 0.9.18";
 		
 		public static const NETCONNECTION_CONNECT_CLOSED		:String = "NetConnection.Connect.Closed";
 		public static const NETCONNECTION_CONNECT_FAILED		:String = "NetConnection.Connect.Failed";
@@ -121,6 +121,7 @@ package com.gearsandcogs.utils
 		private var _ncTypes									:Vector.<NetConnectionType>;
 		private var _portArray									:Array = [443,80,1935];
 		
+		private var _initial_connect_run						:Boolean;
 		private var _is_connecting								:Boolean;
 		private var _was_connected								:Boolean;
 		
@@ -144,6 +145,7 @@ package com.gearsandcogs.utils
 		public function NetConnectionSmart()
 		{
 			_nc_client = new Object();
+			_guid = GUID.create();
 			initConnectionTypes();
 		}
 		
@@ -183,7 +185,7 @@ package com.gearsandcogs.utils
 				connection_rate = 100;
 			
 			//create new guid
-			if(!_guid || recreate_guid)
+			if(recreate_guid && _initial_connect_run)
 				_guid = GUID.create();
 			
 			_connect_params_init = parameters;
@@ -191,6 +193,7 @@ package com.gearsandcogs.utils
 			_server_string = _connect_string_init.substring(0,_connect_string_init.indexOf("/"));
 			_app_string = _connect_string_init.substring(_connect_string_init.indexOf("/"));
 			_encrypted_secure_string = encrypted?"e":secure?"s":"";
+			_initial_connect_run = true;
 			
 			if(_server_string == "" || _app_string.length<2)
 				throw(new Error("Invalid application path. Need server and application name"));
