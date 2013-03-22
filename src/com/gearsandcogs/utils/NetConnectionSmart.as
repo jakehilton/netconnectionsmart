@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.18
+VERSION: 0.9.19
 DATE: 2/28/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -89,7 +89,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT								:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION								:String = "NetConnectionSmart v 0.9.18";
+		public static const VERSION								:String = "NetConnectionSmart v 0.9.19";
 		
 		public static const NETCONNECTION_CONNECT_CLOSED		:String = "NetConnection.Connect.Closed";
 		public static const NETCONNECTION_CONNECT_FAILED		:String = "NetConnection.Connect.Failed";
@@ -236,6 +236,16 @@ package com.gearsandcogs.utils
 			
 			_nc = null;
 			closeExtraNc();
+		}
+		
+		public function get connectParams():Array
+		{
+			return _connect_params_init;
+		}
+		
+		public function set connectParams(paramArray:Array):void
+		{
+			_connect_params_init = paramArray;
 		}
 		
 		public function get guid():String
