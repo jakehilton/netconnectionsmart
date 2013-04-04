@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.20
+VERSION: 0.9.21
 DATE: 2/28/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -89,7 +89,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT								:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION								:String = "NetConnectionSmart v 0.9.20";
+		public static const VERSION								:String = "NetConnectionSmart v 0.9.21";
 		
 		public static const NETCONNECTION_CONNECT_CLOSED		:String = "NetConnection.Connect.Closed";
 		public static const NETCONNECTION_CONNECT_FAILED		:String = "NetConnection.Connect.Failed";
@@ -198,6 +198,9 @@ package com.gearsandcogs.utils
 			_encrypted_secure_string = encrypted?"e":secure?"s":"";
 			_initial_connect_run = true;
 			
+			_nc = null;
+			closeExtraNc();
+			
 			if(_server_string == "" || _app_string.length<2)
 				throw(new Error("Invalid application path. Need server and application name"));
 			
@@ -229,14 +232,17 @@ package com.gearsandcogs.utils
 			return _nc;
 		}
 		
-		public function close():void
+		public function close(is_dirty:Boolean = false):void
 		{
-			if(!_nc)
+			if(!is_dirty)
+				_was_connected = false;
+			
+			if(_nc)
+				_nc.close();
+			
+			if(is_dirty)
 				return;
-			
-			_was_connected = false;
-			_nc.close();
-			
+				
 			_nc = null;
 			closeExtraNc();
 		}
@@ -371,7 +377,7 @@ package com.gearsandcogs.utils
 		 * 
 		 */		
 		
-		private function processConnection(connection:NetConnection,protocol:String,port:String, parameters:Array):void
+		private function processConnection(connection:PortConnection,protocol:String,port:String, parameters:Array):void
 		{
 			if(default_port_only && port != "default")
 				return;
@@ -397,7 +403,7 @@ package com.gearsandcogs.utils
 		
 		private function initPortConnection(nc_num:uint):NetConnectionType
 		{
-			var encrypted_secure_identifier:String = encrypted?"Encrypted/Secure ":" ";
+			var encrypted_secure_identifier:String = encrypted?"Encrypted/Secure ":"";
 			
 			var curr_nct:NetConnectionType = _ncTypes[nc_num];
 			var port_label:String = encrypted_secure_identifier+curr_nct.protocol+" "+curr_nct.port;
@@ -459,10 +465,10 @@ package com.gearsandcogs.utils
 				
 				if(!curr_connection)
 					continue;
-				
+
 				if(curr_connection.status)
 					status_count++;
-				
+
 				if(!connected && curr_connection.connected)
 				{
 					acceptNc(curr_connection);
@@ -487,9 +493,7 @@ package com.gearsandcogs.utils
 				else
 					handleNetStatus(rejected_connection.status);
 			} else if(sequential_connect)
-			{
 				initConnection(++_connection_attempt_count);
-			}
 		}
 		
 		private function handleAsyncError(e:AsyncErrorEvent):void
@@ -563,9 +567,10 @@ package com.gearsandcogs.utils
 import flash.events.AsyncErrorEvent;
 import flash.events.Event;
 import flash.events.NetStatusEvent;
+import flash.events.TimerEvent;
 import flash.net.NetConnection;
+import flash.utils.Timer;
 
-//custom port connection class to wrap netconnection
 class PortConnection extends NetConnection
 {
 	public static const STATUS_UPDATE	:String = "status_update";
@@ -574,6 +579,8 @@ class PortConnection extends NetConnection
 	public var id						:int;
 	public var status					:NetStatusEvent;
 	public var label					:String;
+	
+	private var timeoutTimer			:Timer;
 	
 	public function PortConnection(id:int,label:String,debug:Boolean=false)
 	{
@@ -584,6 +591,25 @@ class PortConnection extends NetConnection
 		addHandlers();
 	}
 	
+	override public function connect(command:String, ...parameters):void
+	{
+		//start a timer here so we can watch this so if it doens't connect in time we can kill it
+		if(!timeoutTimer)
+		{
+			timeoutTimer = new Timer(30000,1);
+			timeoutTimer.addEventListener(TimerEvent.TIMER_COMPLETE,function(e:TimerEvent):void
+			{
+				if(debug) 
+					trace("PortConnection: connection timeout");
+				
+				handleNetStatus(new NetStatusEvent(NetStatusEvent.NET_STATUS,false,false,{code:"NetConnection.Connect.Failed"}));
+			});
+		}
+		timeoutTimer.start();
+		
+		super.connect.apply(null,[command].concat(parameters));
+	}
+	
 	public function addHandlers():void
 	{
 		addEventListener(AsyncErrorEvent.ASYNC_ERROR,handleAsyncError);
@@ -592,6 +618,8 @@ class PortConnection extends NetConnection
 	
 	private function handleNetStatus(e:NetStatusEvent):void
 	{
+		timeoutTimer.stop();
+		
 		//if rejected connection came in we want to preserve that message
 		if(!status || (status && status.info.code != "NetConnection.Connect.Rejected")){
 			if(debug) 
@@ -609,6 +637,11 @@ class PortConnection extends NetConnection
 	
 	public function removeHandlers():void
 	{
+		if(timeoutTimer)
+			timeoutTimer.stop();
+		
+		timeoutTimer = null;
+		
 		removeEventListener(AsyncErrorEvent.ASYNC_ERROR,handleAsyncError);
 		removeEventListener(NetStatusEvent.NET_STATUS,handleNetStatus);
 	}
