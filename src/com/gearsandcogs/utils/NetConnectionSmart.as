@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 0.9.21
+VERSION: 1.0.0
 DATE: 2/28/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -23,7 +23,7 @@ A replacement class for the standard NetConnection actionscript class. This easi
 
 Used to connect quickly through firewalls by trying a NetConnection via a shotgun connection approach or an incremental connection approach.
 
-Possible protocol attempts: rtmp,rtmpt,rtmpe,rtmpte,rtmps.
+Possible protocol attempts: rtmp,rtmpt,rtmpe,rtmpte,rtmps, and rtmfp.
 
 It does have a few properties listed below that can be set before the connect call is made.
 
@@ -47,6 +47,9 @@ USAGE:
 It's a simple use case really.. just use it as you would the built in NetConnection class. Just specify rtmp as the protocol and let
 the class handle the rest whether to use rtmpt or rtmp. In the case of encrypted still only pass in rtmp and it will resolve to rtmpe or rtmpte.
 The only caveat is that for netstreams you'd need to pass in a reference to the connection and not the main class.
+
+It also supports rtmfp which does not require port specification or shotgun approaches. Using this library will support auto-reconnect if needed as well as
+some other hooks this lib buys. It would also be possible to switch between protocols using the same netconnectionsmart connection class.
 
 For example:
 
@@ -89,7 +92,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT								:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION								:String = "NetConnectionSmart v 0.9.21";
+		public static const VERSION								:String = "NetConnectionSmart v 1.0.0";
 		
 		public static const NETCONNECTION_CONNECT_CLOSED		:String = "NetConnection.Connect.Closed";
 		public static const NETCONNECTION_CONNECT_FAILED		:String = "NetConnection.Connect.Failed";
@@ -99,6 +102,7 @@ package com.gearsandcogs.utils
 		public static const NETCONNECTION_RECONNECT_FAILED		:String = "NetConnection.Reconnect.Failed";
 		public static const NETCONNECTION_RECONNECT_INIT		:String = "NetConnection.Reconnect.Init";
 		
+		private static const RTMFP								:String = "rtmfp";
 		private static const RTMP								:String = "rtmp";
 		private static const RTMPT								:String = "rtmpt";
 		
@@ -108,6 +112,7 @@ package com.gearsandcogs.utils
 		public var debug										:Boolean;
 		public var encrypted									:Boolean;
 		public var force_tunneling								:Boolean;
+		public var is_rtmfp										:Boolean;
 		public var recreate_guid								:Boolean;
 		public var secure										:Boolean;
 		public var sequential_connect							:Boolean;
@@ -172,10 +177,13 @@ package com.gearsandcogs.utils
 				return;
 			
 			_is_connecting = true;
+
+			//check for rtmfp connection
+			is_rtmfp = command.substr(0,5).toLocaleLowerCase()=="rtmfp";
 			
 			//strip rtmp variants
 			_connect_string_init = command.indexOf("://")>-1?command.substring(command.indexOf("://")+3):command;
-
+			
 			//strip port declaration
 			if(_connect_string_init.indexOf(":")>-1)
 			{
@@ -190,6 +198,14 @@ package com.gearsandcogs.utils
 			//create new guid
 			if(recreate_guid && _initial_connect_run)
 				_guid = GUID.create();
+			
+			//if rtmfp we need to modify some values
+			if(is_rtmfp)
+			{
+				sequential_connect = true;
+				encrypted = false; // rtmfp is already encrypted so we don't need to append this flag
+				portArray = ["default"];
+			}
 			
 			_connect_params_init = parameters;
 			_connect_params = append_guid?parameters.concat(_guid):parameters;
@@ -396,8 +412,13 @@ package com.gearsandcogs.utils
 			_ncTypes = new Vector.<NetConnectionType>();
 			for each(var r:String in _portArray)
 			{
-				_ncTypes.unshift(new NetConnectionType(RTMP,r));
-				_ncTypes.push(new NetConnectionType(RTMPT,r))
+				if(is_rtmfp)
+					_ncTypes.push(new NetConnectionType(RTMFP,r))
+				else 
+				{
+					_ncTypes.unshift(new NetConnectionType(RTMP,r));
+					_ncTypes.push(new NetConnectionType(RTMPT,r))
+				}
 			}
 		}
 		

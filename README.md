@@ -5,7 +5,7 @@ A replacement class for the standard NetConnection actionscript class. This easi
 
 Used to connect quickly through firewalls by trying a NetConnection via a shotgun connection approach or an incremental connection approach.
 
-Possible protocol attempts: rtmp,rtmpt,rtmpe,rtmpte,rtmps.
+Possible protocol attempts: rtmp,rtmpt,rtmpe,rtmpte,rtmps, and rtmfp.
 
 It does have a few properties listed below that can be set before the connect call is made.
 
@@ -27,3 +27,35 @@ It has an event,MSG_EVT, that fires to notify the user of an event in the class.
 If you are experiencing issues with proxies you can try setting the proxyType="best" as this will attempt to use a different connect method if normal attempts fail.
 
 If you are using this in a mobile IOS Air project I would highly suggest enabling sequential_connect.
+
+USAGE:
+It's a simple use case really.. just use it as you would the built in NetConnection class. Just specify rtmp as the protocol and let
+the class handle the rest whether to use rtmpt or rtmp. In the case of encrypted still only pass in rtmp and it will resolve to rtmpe or rtmpte.
+The only caveat is that for netstreams you'd need to pass in a reference to the connection and not the main class.
+
+It also supports rtmfp which does not require port specification or shotgun approaches. Using this library will support auto-reconnect if needed as well as
+some other hooks this lib buys. It would also be possible to switch between protocols using the same netconnectionsmart connection class.
+
+For example:
+
+```ActionScript
+var client_obj:Object = new Object();
+client_obj.serverMethod = function(e:Object):void
+{
+trace("server can call this");
+}
+
+var ncs:NetConnectionSmart = new NetConnectionSmart();
+ncs.client = client_obj;
+ncs.encrypted = true; //if this isn't specified it will default to rtmp/rtmpt.. if true it will try rtmpe/rtmpte
+ncs.connect("rtmp://myserver.com/application");
+
+ncs.addEventListener(NetStatusEvent.NET_STATUS,function(e:NetStatusEvent):void
+{
+trace("connection status: "+e.info.code);
+trace(ncs.uri);
+trace(ncs.protocol);
+});
+
+var ns:NetStream = new NetStream(ncs.connection);
+```
