@@ -33,7 +33,7 @@ It's a simple use case really.. just use it as you would the built in NetConnect
 the class handle the rest whether to use rtmpt or rtmp. In the case of encrypted still only pass in rtmp and it will resolve to rtmpe or rtmpte.
 The only caveat is that for netstreams you'd need to pass in a reference to the connection and not the main class.
 
-It also supports rtmfp which does not require port specification or shotgun approaches. Using this library will support auto-reconnect if needed as well as
+It also supports rtmfp. Using this library will support auto-reconnect if needed as well as
 some other hooks this lib buys. It would also be possible to switch between protocols using the same netconnectionsmart connection class.
 
 For example:
