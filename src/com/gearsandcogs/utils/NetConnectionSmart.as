@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 1.0.0
-DATE: 2/28/2013
+VERSION: 1.0.1
+DATE: 4/19/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
 A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port.
@@ -92,7 +92,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT								:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION								:String = "NetConnectionSmart v 1.0.0";
+		public static const VERSION								:String = "NetConnectionSmart v 1.0.1";
 		
 		public static const NETCONNECTION_CONNECT_CLOSED		:String = "NetConnection.Connect.Closed";
 		public static const NETCONNECTION_CONNECT_FAILED		:String = "NetConnection.Connect.Failed";
@@ -151,7 +151,6 @@ package com.gearsandcogs.utils
 		{
 			_nc_client = new Object();
 			_guid = GUID.create();
-			initConnectionTypes();
 		}
 		
 		/**
@@ -201,11 +200,9 @@ package com.gearsandcogs.utils
 			
 			//if rtmfp we need to modify some values
 			if(is_rtmfp)
-			{
-				sequential_connect = true;
 				encrypted = false; // rtmfp is already encrypted so we don't need to append this flag
-				portArray = ["default"];
-			}
+
+			initConnectionTypes();
 			
 			_connect_params_init = parameters;
 			_connect_params = append_guid?parameters.concat(_guid):parameters;
