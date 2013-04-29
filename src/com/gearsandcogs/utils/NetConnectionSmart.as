@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 1.0.1
-DATE: 4/19/2013
+VERSION: 1.0.2
+DATE: 4/29/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
 A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port.
@@ -35,6 +35,7 @@ connection_rate: only applicable if using a non-shotgun approach. Sets the rate 
 debug: if you want to see debug messages via your trace panel
 enctyped: used if you want to force the use of an encrypted connection (rtmp(t)e)
 force_tunneling: used if you don't ever want to attempt rtmp connections
+skip_tunneling: used if you don't ever want to attempt rtmpt connections
 reconnect_count_limit: specify the max amount of reconnect attempts are made. Default is 10.
 shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled.
 portArray: an array containing ports in the order they should be tried. By default is it [443,80,1935]
@@ -92,7 +93,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT								:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION								:String = "NetConnectionSmart v 1.0.1";
+		public static const VERSION								:String = "NetConnectionSmart v 1.0.2";
 		
 		public static const NETCONNECTION_CONNECT_CLOSED		:String = "NetConnection.Connect.Closed";
 		public static const NETCONNECTION_CONNECT_FAILED		:String = "NetConnection.Connect.Failed";
@@ -117,6 +118,7 @@ package com.gearsandcogs.utils
 		public var secure										:Boolean;
 		public var sequential_connect							:Boolean;
 		public var shotgun_connect								:Boolean = true;
+		public var skip_tunneling								:Boolean;
 		
 		public var connection_rate								:uint = 200;
 		public var reconnect_count_limit						:uint = 10;
@@ -406,6 +408,9 @@ package com.gearsandcogs.utils
 		
 		private function initConnectionTypes():void
 		{
+			if(skip_tunneling && force_tunneling)
+				throw(new Error("Cannot force tunneling and skip tunneling. Please choose one or the other."));
+			
 			_ncTypes = new Vector.<NetConnectionType>();
 			for each(var r:String in _portArray)
 			{
@@ -413,8 +418,10 @@ package com.gearsandcogs.utils
 					_ncTypes.push(new NetConnectionType(RTMFP,r))
 				else 
 				{
-					_ncTypes.unshift(new NetConnectionType(RTMP,r));
-					_ncTypes.push(new NetConnectionType(RTMPT,r))
+					if(!force_tunneling)
+						_ncTypes.unshift(new NetConnectionType(RTMP,r));
+					if(!skip_tunneling && !secure)
+						_ncTypes.push(new NetConnectionType(RTMPT,r))
 				}
 			}
 		}
@@ -429,9 +436,6 @@ package com.gearsandcogs.utils
 			
 			curr_pc.objectEncoding = _object_encoding;
 			curr_pc.proxyType = _proxy_type;
-			
-			if( (force_tunneling && curr_nct.protocol == RTMP) || (secure && curr_nct.protocol == RTMPT) )
-				curr_pc.status = new NetStatusEvent("skipped");
 			
 			curr_pc.client = _nc_client;
 			curr_pc.addEventListener(PortConnection.STATUS_UPDATE,checkNetStatus);
@@ -456,14 +460,14 @@ package com.gearsandcogs.utils
 		
 		private function initConnection(connect_count:uint=0):void
 		{
-			_connection_attempt_count = force_tunneling?connect_count+portArray.length:connect_count;
-			var curr_nct:NetConnectionType = initPortConnection(_connection_attempt_count);
+			_connection_attempt_count = connect_count;
+			var curr_nct:NetConnectionType = initPortConnection(connect_count);
 			
-			if(!curr_nct.connection.status || curr_nct.connection.status.type != "skipped")
+			if(!curr_nct.connection.status)
 				processConnection(curr_nct.connection,curr_nct.protocol,curr_nct.port,_connect_params);
 			
 			//all connection attempts have been tried
-			if(_connect_timer && _connection_attempt_count == _ncTypes.length-1)
+			if(_connect_timer && connect_count == _ncTypes.length-1)
 				_connect_timer.stop();
 		}
 		
@@ -502,7 +506,7 @@ package com.gearsandcogs.utils
 			
 			//if no success at all return the first rejected message or
 			//return the status of the first connection in the array
-			if(!connected && status_count == _ncTypes.length)
+			if(status_count >= _ncTypes.length)
 			{
 				_is_connecting = false;
 
@@ -561,6 +565,7 @@ package com.gearsandcogs.utils
 				
 				e.info.code = NETCONNECTION_RECONNECT_FAILED;
 				_reconnect_count = 0;
+				close();
 			}
 			dispatchEvent(e);
 		}

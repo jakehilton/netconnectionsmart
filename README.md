@@ -17,6 +17,7 @@ This can be used to identify which connection requests are coming from the same 
 * debug: if you want to see debug messages via your trace panel.
 * enctyped: used if you want to force the use of an encrypted connection (rtmp(t)e) 
 * force_tunneling: used if you don't ever want to attempt rtmp connections 
+* skip_tunneling: used if you don't ever want to attempt rtmpt connections
 * reconnect_count_limit: specify the max amount of reconnect attempts are made. Default is 10. 
 * sequential_connect: a boolean to enable or disable the sequential connect approach. By default it is disabled. This will try a connection one at a time and wait for a failure prior to trying the next type in the sequence. 
 * shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled. 
