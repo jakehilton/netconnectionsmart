@@ -428,7 +428,7 @@ package com.gearsandcogs.utils
 		
 		private function initPortConnection(nc_num:uint):NetConnectionType
 		{
-			var encrypted_secure_identifier:String = encrypted?"Encrypted/Secure ":"";
+			var encrypted_secure_identifier:String = encrypted?"Encrypted ":secure?"Secure ":"";
 			
 			var curr_nct:NetConnectionType = _ncTypes[nc_num];
 			var port_label:String = encrypted_secure_identifier+curr_nct.protocol+" "+curr_nct.port;
