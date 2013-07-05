@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 1.0.5
-DATE: 5/2/2013
+VERSION: 1.0.6
+DATE: 7/5/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
 A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port.
@@ -93,7 +93,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT								:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION								:String = "NetConnectionSmart v 1.0.5";
+		public static const VERSION								:String = "NetConnectionSmart v 1.0.6";
 		
 		public static const NETCONNECTION_CONNECT_CLOSED		:String = "NetConnection.Connect.Closed";
 		public static const NETCONNECTION_CONNECT_FAILED		:String = "NetConnection.Connect.Failed";
@@ -351,9 +351,8 @@ package com.gearsandcogs.utils
 			
 			_nc.client = _nc_client;
 			
-			try {
+			if(_connect_timer)
 				_connect_timer.stop();
-			}catch(e:Error){}
 			
 			closeExtraNc();
 		}
@@ -449,6 +448,9 @@ package com.gearsandcogs.utils
 			if(debug)
 				log("Connecting at a rate of: "+connection_rate);
 			
+			if(_connect_timer)
+				_connect_timer.stop();
+				
 			_connect_timer = new Timer(connection_rate);
 			_connect_timer.addEventListener(TimerEvent.TIMER,function(e:TimerEvent):void
 			{
@@ -461,7 +463,7 @@ package com.gearsandcogs.utils
 		private function initConnection(connect_count:uint=0):void
 		{
 			//all connection attempts have been tried
-			if(connect_count == _ncTypes.length)
+			if(connect_count >= _ncTypes.length)
 			{
 				if(_connect_timer)
 					_connect_timer.stop();
