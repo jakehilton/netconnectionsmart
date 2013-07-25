@@ -183,10 +183,10 @@ package com.gearsandcogs.utils
 			is_rtmfp = command.substr(0,5).toLocaleLowerCase()=="rtmfp";
 			
 			//strip rtmp variants
-			_connect_string_init = command.indexOf("://")>-1?command.substring(command.indexOf("://")+3):command;
+			_connect_string_init = ~command.indexOf("://")?command.substring(command.indexOf("://")+3):command;
 			
 			//strip port declaration
-			if(_connect_string_init.indexOf(":")>-1)
+			if(~_connect_string_init.indexOf(":"))
 			{
 				var split_connect:Array = _connect_string_init.split(":");
 				_connect_string_init = split_connect[0]+split_connect[1].substring(split_connect[1].indexOf("/"));
