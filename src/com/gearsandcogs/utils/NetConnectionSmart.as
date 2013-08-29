@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 1.0.7
+VERSION: 1.0.8
 DATE: 8/29/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -93,7 +93,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT								:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION								:String = "NetConnectionSmart v 1.0.7";
+		public static const VERSION								:String = "NetConnectionSmart v 1.0.8";
 		
 		public static const NETCONNECTION_CONNECT_CLOSED		:String = "NetConnection.Connect.Closed";
 		public static const NETCONNECTION_CONNECT_FAILED		:String = "NetConnection.Connect.Failed";
@@ -130,7 +130,6 @@ package com.gearsandcogs.utils
 		
 		private var _initial_connect_run						:Boolean;
 		private var _is_connecting								:Boolean;
-		private var _is_null									:Boolean;
 		private var _was_connected								:Boolean;
 		
 		private var _nc_client									:Object;
@@ -175,60 +174,61 @@ package com.gearsandcogs.utils
 			if(debug)
 				log(VERSION);
 			
+			//check for null connection param
+			if(command == null)
+			{
+				_nc = new PortConnection(0,"",debug);
+				_nc.connect(null);
+				return;
+			}
+			
 			if(_is_connecting || connected)
 				return;
 			
 			_is_connecting = true;
 
-			//check for null connection param
-			if(command == null)
-				_is_null = true;
-			else
+			//check for rtmfp connection
+			is_rtmfp = command.substr(0,5).toLocaleLowerCase()=="rtmfp";
+			
+			//strip rtmp variants
+			_connect_string_init = ~command.indexOf("://")?command.substring(command.indexOf("://")+3):command;
+			
+			//strip port declaration
+			if(~_connect_string_init.indexOf(":"))
 			{
-				//check for rtmfp connection
-				is_rtmfp = command.substr(0,5).toLocaleLowerCase()=="rtmfp";
-				
-				//strip rtmp variants
-				_connect_string_init = ~command.indexOf("://")?command.substring(command.indexOf("://")+3):command;
-				
-				//strip port declaration
-				if(~_connect_string_init.indexOf(":"))
-				{
-					var split_connect:Array = _connect_string_init.split(":");
-					_connect_string_init = split_connect[0]+split_connect[1].substring(split_connect[1].indexOf("/"));
-				}
-				
-				//setting very low connection rate but helps to avoid race conditions serverside
-				if(shotgun_connect)
-					connection_rate = 100;
-				
-				//create new guid
-				if(recreate_guid && _initial_connect_run)
-					_guid = GUID.create();
-				
-				//if rtmfp we need to modify some values
-				if(is_rtmfp)
-					encrypted = false; // rtmfp is already encrypted so we don't need to append this flag
-	
-				_connect_params_init = parameters;
-				_connect_params = append_guid?parameters.concat(_guid):parameters;
-				_server_string = _connect_string_init.substring(0,_connect_string_init.indexOf("/"));
-				_app_string = _connect_string_init.substring(_connect_string_init.indexOf("/"));
-				_encrypted_secure_string = encrypted?"e":secure?"s":"";
-				
-				if(_server_string == "" || _app_string.length<2)
-					throw(new Error("Invalid application path. Need server and application name"));
-				
-				if(_encrypted_secure_string=="s" && force_tunneling)
-					throw(new Error("Secure connections cannot run over rtmpt. Either turn off force tunnelling or the secure flag."));
-
-				_initial_connect_run = true;
+				var split_connect:Array = _connect_string_init.split(":");
+				_connect_string_init = split_connect[0]+split_connect[1].substring(split_connect[1].indexOf("/"));
 			}
 			
+			//setting very low connection rate but helps to avoid race conditions serverside
+			if(shotgun_connect)
+				connection_rate = 100;
+			
+			//create new guid
+			if(recreate_guid && _initial_connect_run)
+				_guid = GUID.create();
+			
+			//if rtmfp we need to modify some values
+			if(is_rtmfp)
+				encrypted = false; // rtmfp is already encrypted so we don't need to append this flag
+
 			initConnectionTypes();
+			
+			_connect_params_init = parameters;
+			_connect_params = append_guid?parameters.concat(_guid):parameters;
+			_server_string = _connect_string_init.substring(0,_connect_string_init.indexOf("/"));
+			_app_string = _connect_string_init.substring(_connect_string_init.indexOf("/"));
+			_encrypted_secure_string = encrypted?"e":secure?"s":"";
+			_initial_connect_run = true;
 			
 			_nc = null;
 			closeExtraNc();
+			
+			if(_server_string == "" || _app_string.length<2)
+				throw(new Error("Invalid application path. Need server and application name"));
+			
+			if(_encrypted_secure_string=="s" && force_tunneling)
+				throw(new Error("Secure connections cannot run over rtmpt. Either turn off force tunnelling or the secure flag."));
 			
 			if(sequential_connect)
 				initConnection();
@@ -405,13 +405,12 @@ package com.gearsandcogs.utils
 				return;
 			
 			var portpass:String = port!="default"?":"+port:"";
-			var connect_array:Array = _is_null?[null]:[protocol+_encrypted_secure_string+"://"+
-				_server_string+portpass+_app_string].concat(parameters);
-
-			if(debug) 
-				log("connecting to: "+connect_array.join(" "));
 			
-			connection.connect.apply(null,connect_array);
+			if(debug) 
+				log("connecting to: "+protocol+_encrypted_secure_string+"://"+_server_string+portpass+_app_string);
+			
+			connection.connect.apply(null,[protocol+_encrypted_secure_string+"://"+
+				_server_string+portpass+_app_string].concat(parameters));
 		}
 		
 		private function initConnectionTypes():void
