@@ -44,6 +44,8 @@ package com.gearsandcogs.utils
 						trace("PortConnection: connection timeout");
 					
 					handleNetStatus(new NetStatusEvent(NetStatusEvent.NET_STATUS,false,false,{code:"NetConnection.Connect.Failed"}));
+					removeHandlers();
+					close();
 				});
 			}
 			timeoutTimer.start();

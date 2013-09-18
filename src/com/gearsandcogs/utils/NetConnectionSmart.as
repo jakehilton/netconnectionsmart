@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 1.1.1
+VERSION: 1.1.3
 DATE: 9/18/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -36,6 +36,7 @@ connection_timeout: the number of seconds to wait for a connection to succeed be
 debug: if you want to see debug messages via your trace panel
 enctyped: used if you want to force the use of an encrypted connection (rtmp(t)e)
 force_tunneling: used if you don't ever want to attempt rtmp connections
+skip_rtmfp: used if you don't ever want to attempt rtmfp connections
 skip_tunneling: used if you don't ever want to attempt rtmpt connections
 reconnect_count_limit: specify the max amount of reconnect attempts are made. Default is 10.
 shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled.
@@ -95,7 +96,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT								:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION								:String = "NetConnectionSmart v 1.1.1";
+		public static const VERSION								:String = "NetConnectionSmart v 1.1.3";
 		
 		public static const NETCONNECTION_CONNECT_CLOSED		:String = "NetConnection.Connect.Closed";
 		public static const NETCONNECTION_CONNECT_FAILED		:String = "NetConnection.Connect.Failed";
@@ -123,6 +124,7 @@ package com.gearsandcogs.utils
 		public var secure										:Boolean;
 		public var sequential_connect							:Boolean;
 		public var shotgun_connect								:Boolean = true;
+		public var skip_rtmfp									:Boolean;
 		public var skip_tunneling								:Boolean;
 		
 		public var connection_timeout							:uint = 30;
@@ -427,7 +429,8 @@ package com.gearsandcogs.utils
 			_ncTypes = new Vector.<NetConnectionType>();
 			for each(var r:String in _portArray)
 			{
-				add_rtmfp = true;
+				if(!skip_rtmfp)
+					add_rtmfp = true;
 				if(port_test)
 				{
 					add_rtmp = true;
