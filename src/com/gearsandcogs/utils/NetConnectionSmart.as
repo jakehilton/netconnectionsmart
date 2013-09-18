@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 1.0.9
+VERSION: 1.1.0
 DATE: 9/18/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -94,7 +94,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT								:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION								:String = "NetConnectionSmart v 1.0.9";
+		public static const VERSION								:String = "NetConnectionSmart v 1.1.0";
 		
 		public static const NETCONNECTION_CONNECT_CLOSED		:String = "NetConnection.Connect.Closed";
 		public static const NETCONNECTION_CONNECT_FAILED		:String = "NetConnection.Connect.Failed";
@@ -449,9 +449,9 @@ package com.gearsandcogs.utils
 			_ncTypes.sort(function(a:NetConnectionType, b:NetConnectionType):Number
 			{
 				var return_val:int = 1;
-				if(a.protocol == RTMFP && b.protocol == RTMFP)
-					return_val = 0;
-				if(a.protocol == RTMFP && b.protocol != RTMFP)
+				if(a.protocol == b.protocol)
+					return_val = (a.port == portArray[0].toString()?-1:b.port == portArray[0].toString()?1:0);
+				else if(a.protocol == RTMFP && b.protocol != RTMFP)
 					return_val = -1;
 				else if(a.protocol == RTMP && b.protocol != RTMFP)
 					return_val = -1;

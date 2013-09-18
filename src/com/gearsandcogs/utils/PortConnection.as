@@ -16,6 +16,7 @@ package com.gearsandcogs.utils
 		public var status					:NetStatusEvent;
 		public var label					:String;
 		
+		private var _connectedProxyType		:String = "none";
 		private var timeoutTimer			:Timer;
 		
 		private var connect_init_time		:Number;
@@ -49,10 +50,18 @@ package com.gearsandcogs.utils
 			super.connect.apply(null,[command].concat(parameters));
 		}
 		
+		override public function get connectedProxyType():String
+		{
+			return _connectedProxyType;
+		}
+		
 		private function handleNetStatus(e:NetStatusEvent):void
 		{
 			timeoutTimer.stop();
 			status_return_time = new Date().time;
+			
+			if(connected)
+				_connectedProxyType = super.connectedProxyType;
 			
 			//if rejected connection came in we want to preserve that message
 			if(!status || (status && status.info.code != "NetConnection.Connect.Rejected")){
