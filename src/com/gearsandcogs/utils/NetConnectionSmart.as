@@ -15,11 +15,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 1.0.8
-DATE: 8/29/2013
+VERSION: 1.0.9
+DATE: 9/18/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
-A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port.
+A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port and protocol.
 
 Used to connect quickly through firewalls by trying a NetConnection via a shotgun connection approach or an incremental connection approach.
 
@@ -39,6 +39,7 @@ skip_tunneling: used if you don't ever want to attempt rtmpt connections
 reconnect_count_limit: specify the max amount of reconnect attempts are made. Default is 10.
 shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled.
 portArray: an array containing ports in the order they should be tried. By default is it [443,80,1935]
+port_test: a boolean specifying whether to only run a port test for all available protocols over the specified ports in the portArray. If set will also ignore the force_tunneling setting. It will fire events for updates and when it completes.
 
 It has an event,MSG_EVT, that fires to notify the user of an event in the class.
 
@@ -93,12 +94,15 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT								:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION								:String = "NetConnectionSmart v 1.0.8";
+		public static const VERSION								:String = "NetConnectionSmart v 1.0.9";
 		
 		public static const NETCONNECTION_CONNECT_CLOSED		:String = "NetConnection.Connect.Closed";
 		public static const NETCONNECTION_CONNECT_FAILED		:String = "NetConnection.Connect.Failed";
 		public static const NETCONNECTION_CONNECT_REJECTED		:String = "NetConnection.Connect.Rejected";
 		public static const NETCONNECTION_CONNECT_SUCCESS		:String = "NetConnection.Connect.Success";
+		
+		public static const NETCONNECTION_PORT_TEST_UPDATE		:String = "NetConnection.PortTest.Update";
+		public static const NETCONNECTION_PORT_TEST_COMPLETE	:String = "NetConnection.PortTest.Complete";
 		
 		public static const NETCONNECTION_RECONNECT_FAILED		:String = "NetConnection.Reconnect.Failed";
 		public static const NETCONNECTION_RECONNECT_INIT		:String = "NetConnection.Reconnect.Init";
@@ -113,7 +117,7 @@ package com.gearsandcogs.utils
 		public var debug										:Boolean;
 		public var encrypted									:Boolean;
 		public var force_tunneling								:Boolean;
-		public var is_rtmfp										:Boolean;
+		public var port_test									:Boolean;
 		public var recreate_guid								:Boolean;
 		public var secure										:Boolean;
 		public var sequential_connect							:Boolean;
@@ -138,7 +142,6 @@ package com.gearsandcogs.utils
 		
 		private var _app_string									:String;
 		private var _connect_string_init						:String;
-		private var _encrypted_secure_string					:String;
 		private var _guid										:String;
 		private var _proxy_type									:String = "none";
 		private var _server_string								:String;
@@ -187,9 +190,6 @@ package com.gearsandcogs.utils
 			
 			_is_connecting = true;
 
-			//check for rtmfp connection
-			is_rtmfp = command.substr(0,5).toLocaleLowerCase()=="rtmfp";
-			
 			//strip rtmp variants
 			_connect_string_init = ~command.indexOf("://")?command.substring(command.indexOf("://")+3):command;
 			
@@ -208,17 +208,12 @@ package com.gearsandcogs.utils
 			if(recreate_guid && _initial_connect_run)
 				_guid = GUID.create();
 			
-			//if rtmfp we need to modify some values
-			if(is_rtmfp)
-				encrypted = false; // rtmfp is already encrypted so we don't need to append this flag
-
 			initConnectionTypes();
-			
+
 			_connect_params_init = parameters;
 			_connect_params = append_guid?parameters.concat(_guid):parameters;
 			_server_string = _connect_string_init.substring(0,_connect_string_init.indexOf("/"));
 			_app_string = _connect_string_init.substring(_connect_string_init.indexOf("/"));
-			_encrypted_secure_string = encrypted?"e":secure?"s":"";
 			_initial_connect_run = true;
 			
 			_nc = null;
@@ -227,8 +222,8 @@ package com.gearsandcogs.utils
 			if(_server_string == "" || _app_string.length<2)
 				throw(new Error("Invalid application path. Need server and application name"));
 			
-			if(_encrypted_secure_string=="s" && force_tunneling)
-				throw(new Error("Secure connections cannot run over rtmpt. Either turn off force tunnelling or the secure flag."));
+			if(secure && force_tunneling)
+				throw(new Error("Secure connections cannot run over rtmpt. Either turn off force tunneling or the secure flag."));
 			
 			if(sequential_connect)
 				initConnection();
@@ -338,6 +333,11 @@ package com.gearsandcogs.utils
 			initConnectionTypes();
 		}
 		
+		public function get netConnections():Vector.<NetConnectionType>
+		{
+			return _ncTypes;
+		}
+		
 		/**
 		 * 
 		 * private methods used to push things up the stack for listeners
@@ -407,9 +407,9 @@ package com.gearsandcogs.utils
 			var portpass:String = port!="default"?":"+port:"";
 			
 			if(debug) 
-				log("connecting to: "+protocol+_encrypted_secure_string+"://"+_server_string+portpass+_app_string);
+				log("connecting to: "+protocol+"://"+_server_string+portpass+_app_string);
 			
-			connection.connect.apply(null,[protocol+_encrypted_secure_string+"://"+
+			connection.connect.apply(null,[protocol+"://"+
 				_server_string+portpass+_app_string].concat(parameters));
 		}
 		
@@ -418,19 +418,46 @@ package com.gearsandcogs.utils
 			if(skip_tunneling && force_tunneling)
 				throw(new Error("Cannot force tunneling and skip tunneling. Please choose one or the other."));
 			
+			var add_rtmp:Boolean = false;
+			var add_rtmfp:Boolean = false;
+			var add_rtmpt:Boolean = false;
+			
 			_ncTypes = new Vector.<NetConnectionType>();
 			for each(var r:String in _portArray)
 			{
-				if(is_rtmfp)
-					_ncTypes.push(new NetConnectionType(RTMFP,r))
-				else 
+				add_rtmfp = true;
+				if(port_test)
+				{
+					add_rtmp = true;
+					add_rtmpt = true;
+				}else 
 				{
 					if(!force_tunneling)
-						_ncTypes.unshift(new NetConnectionType(RTMP,r));
+						add_rtmp = true;
 					if(!skip_tunneling && !secure)
-						_ncTypes.push(new NetConnectionType(RTMPT,r))
+						add_rtmpt = true;
 				}
+				
+				if(add_rtmp)
+					_ncTypes.unshift(new NetConnectionType(RTMP,r,encrypted?"e":secure?"s":""));
+				if(add_rtmfp)
+					_ncTypes.unshift(new NetConnectionType(RTMFP,r));
+				if(add_rtmpt)
+					_ncTypes.push(new NetConnectionType(RTMPT,r,encrypted?"e":""));
 			}
+			
+			_ncTypes.sort(function(a:NetConnectionType, b:NetConnectionType):Number
+			{
+				var return_val:int = 1;
+				if(a.protocol == RTMFP && b.protocol == RTMFP)
+					return_val = 0;
+				if(a.protocol == RTMFP && b.protocol != RTMFP)
+					return_val = -1;
+				else if(a.protocol == RTMP && b.protocol != RTMFP)
+					return_val = -1;
+				
+				return return_val;
+			});
 		}
 		
 		private function initPortConnection(nc_num:uint):NetConnectionType
@@ -438,7 +465,7 @@ package com.gearsandcogs.utils
 			var encrypted_secure_identifier:String = encrypted?"Encrypted ":secure?"Secure ":"";
 			
 			var curr_nct:NetConnectionType = _ncTypes[nc_num];
-			var port_label:String = encrypted_secure_identifier+curr_nct.protocol+" "+curr_nct.port;
+			var port_label:String = encrypted_secure_identifier+curr_nct.full_protocol+" "+curr_nct.port;
 			var curr_pc:PortConnection = new PortConnection(nc_num,port_label,debug);
 			
 			curr_pc.objectEncoding = _object_encoding;
@@ -482,7 +509,7 @@ package com.gearsandcogs.utils
 			var curr_nct:NetConnectionType = initPortConnection(connect_count);
 			
 			if(!curr_nct.connection.status)
-				processConnection(curr_nct.connection,curr_nct.protocol,curr_nct.port,_connect_params);
+				processConnection(curr_nct.connection,curr_nct.full_protocol,curr_nct.port,_connect_params);
 		}
 		
 		private function checkNetStatus(e:Event):void
@@ -505,7 +532,13 @@ package com.gearsandcogs.utils
 				if(curr_connection.status)
 					status_count++;
 
-				if(!connected && curr_connection.connected)
+				if(port_test)
+				{
+					dispatchEvent(new NetStatusEvent(NetStatusEvent.NET_STATUS,false,false,{code:NETCONNECTION_PORT_TEST_UPDATE}));
+					if(curr_connection.connected)
+						closeDownNc(curr_connection);
+				}
+				else if(!connected && curr_connection.connected)
 				{
 					acceptNc(curr_connection);
 					handleNetStatus(curr_connection.status);
@@ -524,7 +557,13 @@ package com.gearsandcogs.utils
 			{
 				_is_connecting = false;
 
-				if(!rejected_connection)
+				if(port_test)
+				{
+					if(debug)
+						log("port test complete");
+					
+					dispatchEvent(new NetStatusEvent(NetStatusEvent.NET_STATUS,false,false,{code:NETCONNECTION_PORT_TEST_COMPLETE}));
+				}else if(!rejected_connection)
 					handleNetStatus(_ncTypes[_ncTypes.length-1].connection.status);
 				else
 					handleNetStatus(rejected_connection.status);
@@ -597,121 +636,5 @@ package com.gearsandcogs.utils
 				trace("NetConnectionSmart: "+msg);
 			dispatchEvent(new MsgEvent(MSG_EVT,false,false,msg));
 		}
-		
-	}
-}
-
-import flash.events.AsyncErrorEvent;
-import flash.events.Event;
-import flash.events.NetStatusEvent;
-import flash.events.TimerEvent;
-import flash.net.NetConnection;
-import flash.utils.Timer;
-
-class PortConnection extends NetConnection
-{
-	public static const STATUS_UPDATE	:String = "status_update";
-	
-	public var debug					:Boolean;
-	public var id						:int;
-	public var status					:NetStatusEvent;
-	public var label					:String;
-	
-	private var timeoutTimer			:Timer;
-	
-	public function PortConnection(id:int,label:String,debug:Boolean=false)
-	{
-		super();
-		this.debug = debug;
-		this.id = id;
-		this.label = label;
-		addHandlers();
-	}
-	
-	override public function connect(command:String, ...parameters):void
-	{
-		//start a timer here so we can watch this so if it doens't connect in time we can kill it
-		if(!timeoutTimer)
-		{
-			timeoutTimer = new Timer(30000,1);
-			timeoutTimer.addEventListener(TimerEvent.TIMER_COMPLETE,function(e:TimerEvent):void
-			{
-				if(debug) 
-					trace("PortConnection: connection timeout");
-				
-				handleNetStatus(new NetStatusEvent(NetStatusEvent.NET_STATUS,false,false,{code:"NetConnection.Connect.Failed"}));
-			});
-		}
-		timeoutTimer.start();
-		
-		super.connect.apply(null,[command].concat(parameters));
-	}
-	
-	public function addHandlers():void
-	{
-		addEventListener(AsyncErrorEvent.ASYNC_ERROR,handleAsyncError);
-		addEventListener(NetStatusEvent.NET_STATUS,handleNetStatus);
-	}
-	
-	private function handleNetStatus(e:NetStatusEvent):void
-	{
-		timeoutTimer.stop();
-		
-		//if rejected connection came in we want to preserve that message
-		if(!status || (status && status.info.code != "NetConnection.Connect.Rejected")){
-			if(debug) 
-				trace("PortConnection: "+e.info.code);
-			status = e;
-			dispatchEvent(new Event(STATUS_UPDATE));
-		}
-	}
-	
-	private function handleAsyncError(e:AsyncErrorEvent):void
-	{
-		if(debug)
-			trace("PortConnection: "+e.toString());
-	}
-	
-	public function removeHandlers():void
-	{
-		if(timeoutTimer)
-			timeoutTimer.stop();
-		
-		timeoutTimer = null;
-		
-		removeEventListener(AsyncErrorEvent.ASYNC_ERROR,handleAsyncError);
-		removeEventListener(NetStatusEvent.NET_STATUS,handleNetStatus);
-	}
-	
-	public function onBWDone():void
-	{
-		//don't do anything
-	}
-	
-	public function getProtocol():String
-	{
-		return uri.substring(0,uri.indexOf("://"));
-	}
-	
-	public function get rejected():Boolean
-	{
-		try{
-			return status.info.code == "NetConnection.Connect.Rejected";
-		}catch(e:Error){}
-		
-		return false;
-	}
-}
-
-class NetConnectionType
-{
-	public var connection		:PortConnection;
-	public var port				:String;
-	public var protocol			:String;
-	
-	public function NetConnectionType(protocol:String, port:String)
-	{
-		this.port = port;
-		this.protocol = protocol;
 	}
 }
