@@ -15,6 +15,7 @@ package com.gearsandcogs.utils
 		public var id						:int;
 		public var status					:NetStatusEvent;
 		public var label					:String;
+		public var connection_timeout		:uint = 30;
 		
 		private var _connectedProxyType		:String = "none";
 		private var timeoutTimer			:Timer;
@@ -36,7 +37,7 @@ package com.gearsandcogs.utils
 			//start a timer here so we can watch this so if it doens't connect in time we can kill it
 			if(!timeoutTimer)
 			{
-				timeoutTimer = new Timer(30000,1);
+				timeoutTimer = new Timer(connection_timeout*1000,1);
 				timeoutTimer.addEventListener(TimerEvent.TIMER_COMPLETE,function(e:TimerEvent):void
 				{
 					if(debug) 

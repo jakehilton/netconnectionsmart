@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 1.1.0
+VERSION: 1.1.1
 DATE: 9/18/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -32,6 +32,7 @@ This can be used to identify which connection requests are coming from the same 
 recreate_guid: a boolean to enable the recreation of the GUID each time the main connect method is called. By default this is false.
 auto_reconnect: a boolean to enable or dispable automatic reconnect attempts. By default this is set to false.
 connection_rate: only applicable if using a non-shotgun approach. Sets the rate that connections are tried. By default this is 200ms
+connection_timeout: the number of seconds to wait for a connection to succeed before it's deemmed faulty.
 debug: if you want to see debug messages via your trace panel
 enctyped: used if you want to force the use of an encrypted connection (rtmp(t)e)
 force_tunneling: used if you don't ever want to attempt rtmp connections
@@ -94,7 +95,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT								:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION								:String = "NetConnectionSmart v 1.1.0";
+		public static const VERSION								:String = "NetConnectionSmart v 1.1.1";
 		
 		public static const NETCONNECTION_CONNECT_CLOSED		:String = "NetConnection.Connect.Closed";
 		public static const NETCONNECTION_CONNECT_FAILED		:String = "NetConnection.Connect.Failed";
@@ -124,6 +125,7 @@ package com.gearsandcogs.utils
 		public var shotgun_connect								:Boolean = true;
 		public var skip_tunneling								:Boolean;
 		
+		public var connection_timeout							:uint = 30;
 		public var connection_rate								:uint = 200;
 		public var reconnect_count_limit						:uint = 10;
 
@@ -468,6 +470,7 @@ package com.gearsandcogs.utils
 			var port_label:String = encrypted_secure_identifier+curr_nct.full_protocol+" "+curr_nct.port;
 			var curr_pc:PortConnection = new PortConnection(nc_num,port_label,debug);
 			
+			curr_pc.connection_timeout = connection_timeout;
 			curr_pc.objectEncoding = _object_encoding;
 			curr_pc.proxyType = _proxy_type;
 			
