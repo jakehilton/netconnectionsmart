@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 1.1.3
-DATE: 9/18/2013
+VERSION: 1.1.4
+DATE: 9/25/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
 A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port and protocol.
@@ -34,9 +34,9 @@ auto_reconnect: a boolean to enable or dispable automatic reconnect attempts. By
 connection_rate: only applicable if using a non-shotgun approach. Sets the rate that connections are tried. By default this is 200ms
 connection_timeout: the number of seconds to wait for a connection to succeed before it's deemmed faulty.
 debug: if you want to see debug messages via your trace panel
+enable_rtmfp: puts rtmfp into the list of attempted protocols. By default this is set to false because it can cause slow timeouts when used with sequential connect
 enctyped: used if you want to force the use of an encrypted connection (rtmp(t)e)
 force_tunneling: used if you don't ever want to attempt rtmp connections
-skip_rtmfp: used if you don't ever want to attempt rtmfp connections
 skip_tunneling: used if you don't ever want to attempt rtmpt connections
 reconnect_count_limit: specify the max amount of reconnect attempts are made. Default is 10.
 shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled.
@@ -96,7 +96,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT								:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION								:String = "NetConnectionSmart v 1.1.3";
+		public static const VERSION								:String = "NetConnectionSmart v 1.1.4";
 		
 		public static const NETCONNECTION_CONNECT_CLOSED		:String = "NetConnection.Connect.Closed";
 		public static const NETCONNECTION_CONNECT_FAILED		:String = "NetConnection.Connect.Failed";
@@ -117,6 +117,7 @@ package com.gearsandcogs.utils
 		public var auto_reconnect								:Boolean;
 		public var default_port_only							:Boolean;
 		public var debug										:Boolean;
+		public var enable_rtmfp									:Boolean;
 		public var encrypted									:Boolean;
 		public var force_tunneling								:Boolean;
 		public var port_test									:Boolean;
@@ -124,7 +125,6 @@ package com.gearsandcogs.utils
 		public var secure										:Boolean;
 		public var sequential_connect							:Boolean;
 		public var shotgun_connect								:Boolean = true;
-		public var skip_rtmfp									:Boolean;
 		public var skip_tunneling								:Boolean;
 		
 		public var connection_timeout							:uint = 30;
@@ -423,14 +423,11 @@ package com.gearsandcogs.utils
 				throw(new Error("Cannot force tunneling and skip tunneling. Please choose one or the other."));
 			
 			var add_rtmp:Boolean = false;
-			var add_rtmfp:Boolean = false;
 			var add_rtmpt:Boolean = false;
 			
 			_ncTypes = new Vector.<NetConnectionType>();
 			for each(var r:String in _portArray)
 			{
-				if(!skip_rtmfp)
-					add_rtmfp = true;
 				if(port_test)
 				{
 					add_rtmp = true;
@@ -445,7 +442,7 @@ package com.gearsandcogs.utils
 				
 				if(add_rtmp)
 					_ncTypes.unshift(new NetConnectionType(RTMP,r,encrypted?"e":secure?"s":""));
-				if(add_rtmfp)
+				if(enable_rtmfp)
 					_ncTypes.unshift(new NetConnectionType(RTMFP,r));
 				if(add_rtmpt)
 					_ncTypes.push(new NetConnectionType(RTMPT,r,encrypted?"e":""));
