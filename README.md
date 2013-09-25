@@ -13,9 +13,10 @@ It does have a few properties listed below that can be set before the connect ca
 This can be used to identify which connection requests are coming from the same client and can be ignored if a connection is already being processed. By default it is false.
 * recreate_guid: a boolean to enable the recreation of the GUID each time the main connect method is called. By default this is false.
 * auto_reconnect: a boolean to enable or dispable automatic reconnect attempts. By default this is set to false. 
-* connection_timeout: the number of seconds to wait for a connection to succeed before it's deemmed faulty.
 * connection_rate: only applicable if using a non-shotgun approach. Sets the rate that connections are tried. By default this is 200ms 
+* connection_timeout: the number of seconds to wait for a connection to succeed before it's deemmed faulty.
 * debug: if you want to see debug messages via your trace panel.
+* enable_rtmfp: puts rtmfp into the list of attempted protocols. By default this is set to false because it can cause slow timeouts when used with sequential connect
 * enctyped: used if you want to force the use of an encrypted connection (rtmp(t)e) 
 * force_tunneling: used if you don't ever want to attempt rtmp connections 
 * skip_tunneling: used if you don't ever want to attempt rtmpt connections

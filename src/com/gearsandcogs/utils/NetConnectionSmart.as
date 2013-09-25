@@ -39,6 +39,7 @@ enctyped: used if you want to force the use of an encrypted connection (rtmp(t)e
 force_tunneling: used if you don't ever want to attempt rtmp connections
 skip_tunneling: used if you don't ever want to attempt rtmpt connections
 reconnect_count_limit: specify the max amount of reconnect attempts are made. Default is 10.
+sequential_connect: a boolean to enable or disable the sequential connect approach. By default it is disabled. This will try a connection one at a time and wait for a failure prior to trying the next type in the sequence. 
 shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled.
 portArray: an array containing ports in the order they should be tried. By default is it [443,80,1935]
 port_test: a boolean specifying whether to only run a port test for all available protocols over the specified ports in the portArray. If set will also ignore the force_tunneling setting. It will fire events for updates and when it completes.
