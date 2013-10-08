@@ -24,7 +24,7 @@ This can be used to identify which connection requests are coming from the same 
 * sequential_connect: a boolean to enable or disable the sequential connect approach. By default it is disabled. This will try a connection one at a time and wait for a failure prior to trying the next type in the sequence. 
 * shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled. 
 * portArray: an array containing ports in the order they should be tried. By default is it [443,80,1935]
-* port_test: a boolean specifying whether to only run a port test for all available protocols over the specified ports in the portArray. If set will also ignore the force_tunneling setting. It will fire events for updates and when it completes.
+* port_test: a boolean specifying whether to only run a port test for all available protocols over the specified ports in the portArray. It will fire events for updates and when it completes.
 
 It has an event,MSG_EVT, that fires to notify the user of an event in the class.
 
