@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 1.1.4
+VERSION: 1.1.5
 DATE: 9/25/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -97,7 +97,7 @@ package com.gearsandcogs.utils
 	public class NetConnectionSmart extends EventDispatcher
 	{
 		public static const MSG_EVT								:String = "NetConnectionSmartMsgEvent";
-		public static const VERSION								:String = "NetConnectionSmart v 1.1.4";
+		public static const VERSION								:String = "NetConnectionSmart v 1.1.5";
 		
 		public static const NETCONNECTION_CONNECT_CLOSED		:String = "NetConnection.Connect.Closed";
 		public static const NETCONNECTION_CONNECT_FAILED		:String = "NetConnection.Connect.Failed";
@@ -423,29 +423,14 @@ package com.gearsandcogs.utils
 			if(skip_tunneling && force_tunneling)
 				throw(new Error("Cannot force tunneling and skip tunneling. Please choose one or the other."));
 			
-			var add_rtmp:Boolean = false;
-			var add_rtmpt:Boolean = false;
-			
 			_ncTypes = new Vector.<NetConnectionType>();
 			for each(var r:String in _portArray)
 			{
-				if(port_test)
-				{
-					add_rtmp = true;
-					add_rtmpt = true;
-				}else 
-				{
-					if(!force_tunneling)
-						add_rtmp = true;
-					if(!skip_tunneling && !secure)
-						add_rtmpt = true;
-				}
-				
-				if(add_rtmp)
+				if(!force_tunneling)
 					_ncTypes.unshift(new NetConnectionType(RTMP,r,encrypted?"e":secure?"s":""));
 				if(enable_rtmfp)
 					_ncTypes.unshift(new NetConnectionType(RTMFP,r));
-				if(add_rtmpt)
+				if(!skip_tunneling && !secure)
 					_ncTypes.push(new NetConnectionType(RTMPT,r,encrypted?"e":""));
 			}
 			
