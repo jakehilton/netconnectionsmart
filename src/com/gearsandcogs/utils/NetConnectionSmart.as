@@ -30,7 +30,7 @@ It does have a few properties listed below that can be set before the connect ca
 append_guid: a boolean to enable a unique GUID be placed at the end of the parameters argument passed into the connect method.  
 This can be used to identify which connection requests are coming from the same client and that can be ignored if one is already being processed.
 recreate_guid: a boolean to enable the recreation of the GUID each time the main connect method is called. By default this is false.
-auto_reconnect: a boolean to enable or dispable automatic reconnect attempts. By default this is set to false.
+auto_reconnect: a boolean to enable or disable automatic reconnect attempts. By default this is set to false.
 connection_rate: only applicable if using a non-shotgun approach. Sets the rate that connections are tried. By default this is 200ms
 connection_timeout: the number of seconds to wait for a connection to succeed before it's deemmed faulty.
 debug: if you want to see debug messages via your trace panel
