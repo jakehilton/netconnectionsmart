@@ -35,7 +35,7 @@ connection_rate: only applicable if using a non-shotgun approach. Sets the rate 
 connection_timeout: the number of seconds to wait for a connection to succeed before it's deemmed faulty.
 debug: if you want to see debug messages via your trace panel
 enable_rtmfp: puts rtmfp into the list of attempted protocols. By default this is set to false because it can cause slow timeouts when used with sequential connect
-enctyped: used if you want to force the use of an encrypted connection (rtmp(t)e)
+encrypted: used if you want to force the use of an encrypted connection (rtmp(t)e)
 force_tunneling: used if you don't ever want to attempt rtmp connections
 skip_tunneling: used if you don't ever want to attempt rtmpt connections
 reconnect_count_limit: specify the max amount of reconnect attempts are made. Default is 10.
