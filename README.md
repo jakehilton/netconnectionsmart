@@ -46,20 +46,28 @@ For example:
 var client_obj:Object = new Object();
 client_obj.serverMethod = function(e:Object):void
 {
-trace("server can call this");
+    trace("server can call this");
 }
 
 var ncs:NetConnectionSmart = new NetConnectionSmart();
 ncs.client = client_obj;
 ncs.encrypted = true; //if this isn't specified it will default to rtmp/rtmpt.. if true it will try rtmpe/rtmpte
-ncs.connect("rtmp://myserver.com/application");
 
 ncs.addEventListener(NetStatusEvent.NET_STATUS,function(e:NetStatusEvent):void
 {
-trace("connection status: "+e.info.code);
-trace(ncs.uri);
-trace(ncs.protocol);
+    trace("connection status: "+e.info.code);
+    trace(ncs.uri);
+    trace(ncs.protocol);
+    
+    switch (e.info.code)
+    {
+        case NetConnectionSmart.NETCONNECTION_CONNECT_SUCCESS:
+            var ns:NetStream = new NetStream(ncs.connection);
+            //do other netstream actions
+            break;
+    }
 });
 
-var ns:NetStream = new NetStream(ncs.connection);
+ncs.connect("rtmp://myserver.com/application");
+
 ```
