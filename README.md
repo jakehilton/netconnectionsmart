@@ -20,7 +20,8 @@ This can be used to identify which connection requests are coming from the same 
 * encrypted: used if you want to force the use of an encrypted connection (rtmp(t)e) 
 * force_tunneling: used if you don't ever want to attempt rtmp connections 
 * skip_tunneling: used if you don't ever want to attempt rtmpt connections
-* reconnect_count_limit: specify the max amount of reconnect attempts are made. Default is 10. 
+* reconnect_count_limit: specify the max amount of reconnect attempts are made. If set to 0 reconnect attempts will occur indefinitely. Default is 10.
+* reconnect_max_time_wait: specify the max amount of time to pass between reconnect attempts. The reconnect logic employs an exponential back-off algorithm so it delays each successive attempt expnentially with a cap at the max set here plus a random seed. Default is 10.
 * sequential_connect: a boolean to enable or disable the sequential connect approach. By default it is disabled. This will try a connection one at a time and wait for a failure prior to trying the next type in the sequence. 
 * shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled. 
 * portArray: an array containing ports in the order they should be tried. By default is it [443,80,1935]
