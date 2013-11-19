@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 1.1.6
+VERSION: 1.1.7
 DATE: 11/15/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
@@ -105,7 +105,7 @@ package com.gearsandcogs.utils
     public class NetConnectionSmart extends EventDispatcher
     {
         public static const MSG_EVT                             :String = "NetConnectionSmartMsgEvent";
-        public static const VERSION                             :String = "NetConnectionSmart v 1.1.6";
+        public static const VERSION                             :String = "NetConnectionSmart v 1.1.7";
         
         public static const NETCONNECTION_CONNECT_CLOSED        :String = "NetConnection.Connect.Closed";
         public static const NETCONNECTION_CONNECT_FAILED        :String = "NetConnection.Connect.Failed";
@@ -160,6 +160,7 @@ package com.gearsandcogs.utils
         private var _server_string                              :String;
         
         private var _connect_timer                              :Timer;
+        private var _reconnect_timer                            :Timer;
         
         private var _connection_attempt_count                   :uint;
         private var _object_encoding                            :uint = ObjectEncoding.AMF3;
@@ -269,6 +270,12 @@ package com.gearsandcogs.utils
         {
             if(!is_dirty)
                 _was_connected = false;
+            
+            if(_reconnect_timer)
+            {
+                _reconnect_timer.stop();
+                _reconnect_timer = null;
+            }
             
             if(_nc)
                 _nc.close();
@@ -610,14 +617,14 @@ package com.gearsandcogs.utils
                 _reconnect_count++;
                 
                 var calclated_reconnect_wait:uint = (Math.min(reconnect_max_time_wait,(Math.pow(2,_reconnect_count)-1)/2)+Math.random())*1000;
-                var reconnect_timer:Timer = new Timer(calclated_reconnect_wait,1);
-                reconnect_timer.addEventListener(TimerEvent.TIMER_COMPLETE,function(e:TimerEvent):void
+                _reconnect_timer = new Timer(calclated_reconnect_wait,1);
+                _reconnect_timer.addEventListener(TimerEvent.TIMER_COMPLETE,function(e:TimerEvent):void
                 {
                     connect.apply(null,[_connect_string_init].concat(_connect_params_init));
-                    reconnect_timer = null;
+                    _reconnect_timer = null;
                 });
                 
-                reconnect_timer.start();
+                _reconnect_timer.start();
             }
             else
             {
