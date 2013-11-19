@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 1.1.5
-DATE: 9/25/2013
+VERSION: 1.1.6
+DATE: 11/15/2013
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
 A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port and protocol.
@@ -38,7 +38,8 @@ enable_rtmfp: puts rtmfp into the list of attempted protocols. By default this i
 encrypted: used if you want to force the use of an encrypted connection (rtmp(t)e)
 force_tunneling: used if you don't ever want to attempt rtmp connections
 skip_tunneling: used if you don't ever want to attempt rtmpt connections
-reconnect_count_limit: specify the max amount of reconnect attempts are made. Default is 10.
+reconnect_count_limit: specify the max amount of reconnect attempts are made. If set to 0 reconnect attempts will occur indefinitely. Default is 10.
+reconnect_max_time_wait: specify the max amount of time to pass between reconnect attempts. The reconnect logic employs an exponential back-off algorithm so it delays each successive attempt expnentially with a cap at the max set here plus a random seed. Default is 10.
 sequential_connect: a boolean to enable or disable the sequential connect approach. By default it is disabled. This will try a connection one at a time and wait for a failure prior to trying the next type in the sequence. 
 shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled.
 portArray: an array containing ports in the order they should be tried. By default is it [443,80,1935]
@@ -104,7 +105,7 @@ package com.gearsandcogs.utils
     public class NetConnectionSmart extends EventDispatcher
     {
         public static const MSG_EVT                             :String = "NetConnectionSmartMsgEvent";
-        public static const VERSION                             :String = "NetConnectionSmart v 1.1.5";
+        public static const VERSION                             :String = "NetConnectionSmart v 1.1.6";
         
         public static const NETCONNECTION_CONNECT_CLOSED        :String = "NetConnection.Connect.Closed";
         public static const NETCONNECTION_CONNECT_FAILED        :String = "NetConnection.Connect.Failed";
@@ -138,6 +139,7 @@ package com.gearsandcogs.utils
         public var connection_timeout                           :uint = 30;
         public var connection_rate                              :uint = 200;
         public var reconnect_count_limit                        :uint = 10;
+        public var reconnect_max_time_wait                      :uint = 10;
         
         private var _connect_params                             :Array;
         private var _connect_params_init                        :Array;
@@ -598,16 +600,25 @@ package com.gearsandcogs.utils
             if(!auto_reconnect || !_was_connected || (e.info.code != "NetConnection.Connect.Closed" && e.info.code != "NetConnection.Connect.Failed"))
                 return;
             
-            if(_reconnect_count<reconnect_count_limit)
+            if(reconnect_count_limit == 0 || (_reconnect_count<reconnect_count_limit) )
             {
                 if(debug)
                     log("attempting to reconnect");
                 
                 e.info.code = NETCONNECTION_RECONNECT_INIT;
                 e.info.level = "status";
-                connect.apply(null,[_connect_string_init].concat(_connect_params_init));
                 _reconnect_count++;
-            } 
+                
+                var calclated_reconnect_wait:uint = (Math.min(reconnect_max_time_wait,(Math.pow(2,_reconnect_count)-1)/2)+Math.random())*1000;
+                var reconnect_timer:Timer = new Timer(calclated_reconnect_wait,1);
+                reconnect_timer.addEventListener(TimerEvent.TIMER_COMPLETE,function(e:TimerEvent):void
+                {
+                    connect.apply(null,[_connect_string_init].concat(_connect_params_init));
+                    reconnect_timer = null;
+                });
+                
+                reconnect_timer.start();
+            }
             else
             {
                 if(debug)
