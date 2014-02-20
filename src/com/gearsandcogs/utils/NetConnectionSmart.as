@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION: 1.1.7
-DATE: 11/15/2013
+VERSION: 1.1.8
+DATE: 02/20/2014
 ACTIONSCRIPT VERSION: 3.0
 DESCRIPTION:
 A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port and protocol.
@@ -105,10 +105,11 @@ package com.gearsandcogs.utils
     public class NetConnectionSmart extends EventDispatcher
     {
         public static const MSG_EVT                             :String = "NetConnectionSmartMsgEvent";
-        public static const VERSION                             :String = "NetConnectionSmart v 1.1.7";
+        public static const VERSION                             :String = "NetConnectionSmart v 1.1.8";
         
         public static const NETCONNECTION_CONNECT_CLOSED        :String = "NetConnection.Connect.Closed";
         public static const NETCONNECTION_CONNECT_FAILED        :String = "NetConnection.Connect.Failed";
+        public static const NETCONNECTION_CONNECT_NETWORKCHANGE :String = "NetConnection.Connect.NetworkChange";
         public static const NETCONNECTION_CONNECT_REJECTED      :String = "NetConnection.Connect.Rejected";
         public static const NETCONNECTION_CONNECT_SUCCESS       :String = "NetConnection.Connect.Success";
         
@@ -166,8 +167,11 @@ package com.gearsandcogs.utils
         private var _object_encoding                            :uint = ObjectEncoding.AMF3;
         private var _reconnect_count                            :uint;
         
-        private var _ncTypes                                    :Vector.<NetConnectionType>;
+        protected var _ncTypes                                  :Vector.<NetConnectionType>;
 
+        /**
+         * A replacement class for the build-in NetConnection class.
+         */
         public function NetConnectionSmart()
         {
             _nc_client = new Object();
@@ -175,11 +179,8 @@ package com.gearsandcogs.utils
         }
         
         /**
-         * 
-         *public functions callable like the netconnection ones
-         *
-         */        
-        
+         * @copy NetConnection#connect
+         */
         public function call(command:String,responder:Responder=null,...parameters):void
         {
             if(!_nc || !_nc.connected)
@@ -187,7 +188,10 @@ package com.gearsandcogs.utils
             
             _nc.call.apply(null,[command,responder].concat(parameters));
         }
-        
+
+        /**
+         * @copy NetConnection#connect
+         */
         public function connect(command:String, ...parameters):void
         {
             if(debug)
@@ -246,12 +250,18 @@ package com.gearsandcogs.utils
             else
                 initializeTimers();
         }
-        
+
+        /**
+         * @inheritDoc
+         */
         public function set client(obj:Object):void
         {
             _nc_client = obj;
         }
-        
+
+        /**
+         * @return A boolean whether the active netconnection is connected
+         */
         public function get connected():Boolean
         {
             try{
@@ -321,7 +331,7 @@ package com.gearsandcogs.utils
         
         public function get proxyType():String
         {
-            return _nc.proxyType;
+            return _nc?_nc.proxyType:null;
         }
         
         public function set proxyType(type:String):void
@@ -435,7 +445,7 @@ package com.gearsandcogs.utils
                 _server_string+portpass+_app_string].concat(parameters));
         }
         
-        private function initConnectionTypes():void
+        protected function initConnectionTypes():void
         {
             if(skip_tunneling && force_tunneling)
                 throw(new Error("Cannot force tunneling and skip tunneling. Please choose one or the other."));
@@ -465,7 +475,7 @@ package com.gearsandcogs.utils
             });
         }
         
-        private function initPortConnection(nc_num:uint):NetConnectionType
+        protected function initPortConnection(nc_num:uint):NetConnectionType
         {
             var encrypted_secure_identifier:String = encrypted?"Encrypted ":secure?"Secure ":"";
             
@@ -616,8 +626,8 @@ package com.gearsandcogs.utils
                 e.info.level = "status";
                 _reconnect_count++;
                 
-                var calclated_reconnect_wait:uint = (Math.min(reconnect_max_time_wait,(Math.pow(2,_reconnect_count)-1)/2)+Math.random())*1000;
-                _reconnect_timer = new Timer(calclated_reconnect_wait,1);
+                var calculated_reconnect_wait:uint = (Math.min(reconnect_max_time_wait,(Math.pow(2,_reconnect_count)-1)/2)+Math.random())*1000;
+                _reconnect_timer = new Timer(calculated_reconnect_wait,1);
                 _reconnect_timer.addEventListener(TimerEvent.TIMER_COMPLETE,function(e:TimerEvent):void
                 {
                     connect.apply(null,[_connect_string_init].concat(_connect_params_init));
