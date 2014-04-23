@@ -137,6 +137,8 @@ package com.gearsandcogs.utils
         public var reconnect_count_limit:uint = 10;
         public var reconnect_max_time_wait:uint = 10;
 
+        protected var _ncTypes:Vector.<NetConnectionType>;
+
         private var _connect_params:Array;
         private var _connect_params_init:Array;
         private var _portArray:Array = [443, 80, 1935];
@@ -155,7 +157,6 @@ package com.gearsandcogs.utils
         private var _connection_attempt_count:uint;
         private var _object_encoding:uint = ObjectEncoding.AMF3;
         private var _reconnect_count:uint;
-        private var _ncTypes:Vector.<NetConnectionType>;
 
         /**
          * A replacement class for the build-in NetConnection class.
