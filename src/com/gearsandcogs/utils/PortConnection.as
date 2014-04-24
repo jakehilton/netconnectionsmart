@@ -6,7 +6,6 @@ package com.gearsandcogs.utils
     import flash.events.TimerEvent;
     import flash.net.NetConnection;
     import flash.utils.Timer;
-    import flash.utils.setTimeout;
 
     public class PortConnection extends NetConnection
     {
@@ -121,10 +120,12 @@ package com.gearsandcogs.utils
 
                 //hack alert..
                 //need to delay the status update slightly so we can run operations like close based off of this event
-                setTimeout(function ():void
+                var statusDelayTimer:Timer = new Timer(0, 1);
+                statusDelayTimer.addEventListener(TimerEvent.TIMER_COMPLETE, function (e:TimerEvent):void
                 {
                     dispatchEvent(new Event(STATUS_UPDATE));
-                }, 0);
+                });
+                statusDelayTimer.start();
             }
         }
 

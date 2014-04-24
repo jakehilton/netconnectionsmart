@@ -191,11 +191,17 @@ package com.gearsandcogs.utils
             return false;
         }
 
+        /**
+         * @return A boolean whether the active netconnection is connecting
+         */
         public function get connecting():Boolean
         {
             return _is_connecting;
         }
 
+        /**
+         * @return Resolved active netconnection
+         */
         public function get connection():NetConnection
         {
             return _nc;
@@ -417,13 +423,6 @@ package com.gearsandcogs.utils
             return curr_nct;
         }
 
-        /**
-         *
-         * private methods used to push things up the stack for listeners
-         * and to manage net connections
-         *
-         */
-
         private function acceptNc(portConnection:PortConnection):void
         {
             _nc = portConnection;
@@ -519,7 +518,6 @@ package com.gearsandcogs.utils
          * @param parameters
          *
          */
-
         private function processConnection(connection:PortConnection, protocol:String, port:String, parameters:Array):void
         {
             if (default_port_only && port != "default")
