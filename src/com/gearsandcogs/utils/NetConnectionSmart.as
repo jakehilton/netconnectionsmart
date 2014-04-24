@@ -15,8 +15,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- VERSION: 1.2.1
- DATE: 04/23/2014
+ VERSION: 1.2.2
+ DATE: 04/24/2014
  ACTIONSCRIPT VERSION: 3.0
  DESCRIPTION:
  A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port and protocol.
@@ -117,7 +117,7 @@ package com.gearsandcogs.utils
         private static const RTMFP:String = "rtmfp";
         private static const RTMP:String = "rtmp";
         private static const RTMPT:String = "rtmpt";
-        public static const VERSION:String = "NetConnectionSmart v 1.2.1";
+        public static const VERSION:String = "NetConnectionSmart v 1.2.2";
         public var append_guid:Boolean;
         public var auto_reconnect:Boolean;
         public var default_port_only:Boolean;
@@ -144,7 +144,6 @@ package com.gearsandcogs.utils
         private var _portArray:Array = [443, 80, 1935];
         private var _initial_connect_run:Boolean;
         private var _is_connecting:Boolean;
-        private var _was_connected:Boolean;
         private var _nc_client:Object;
         private var _nc:PortConnection;
         private var _app_string:String;
@@ -294,7 +293,7 @@ package com.gearsandcogs.utils
         public function close(is_dirty:Boolean = false):void
         {
             if (!is_dirty)
-                _was_connected = false;
+                _nc.was_connected = false;
 
             if (_reconnect_timer)
             {
@@ -532,6 +531,47 @@ package com.gearsandcogs.utils
                 _server_string + portpass + _app_string].concat(parameters));
         }
 
+        protected function handleNetStatus(e:NetStatusEvent):void
+        {
+            if (debug && e.info && e.info.code)
+                log(e.info.code);
+
+            dispatchEvent(e);
+
+            if (!auto_reconnect || !_nc.was_connected || (e.info.code != "NetConnection.Connect.Closed" && e.info.code != "NetConnection.Connect.Failed"))
+                return;
+
+            if (reconnect_count_limit == 0 || (_reconnect_count < reconnect_count_limit))
+            {
+                if (debug)
+                    log("attempting to reconnect");
+
+                e.info.code = NETCONNECTION_RECONNECT_INIT;
+                e.info.level = "status";
+                _reconnect_count++;
+
+                var calculated_reconnect_wait:uint = (Math.min(reconnect_max_time_wait, (Math.pow(2, _reconnect_count) - 1) / 2) + Math.random()) * 1000;
+                _reconnect_timer = new Timer(calculated_reconnect_wait, 1);
+                _reconnect_timer.addEventListener(TimerEvent.TIMER_COMPLETE, function (e:TimerEvent):void
+                {
+                    connect.apply(null, [_connect_string_init].concat(_connect_params_init));
+                    _reconnect_timer = null;
+                });
+
+                _reconnect_timer.start();
+            }
+            else
+            {
+                if (debug)
+                    log("reconnect limit reached");
+
+                e.info.code = NETCONNECTION_RECONNECT_FAILED;
+                _reconnect_count = 0;
+                close();
+            }
+            dispatchEvent(e);
+        }
+
         private function checkNetStatus(e:Event):void
         {
             var target_connection:PortConnection = e.target as PortConnection;
@@ -563,7 +603,6 @@ package com.gearsandcogs.utils
                     acceptNc(curr_connection);
                     handleNetStatus(curr_connection.status);
                     _is_connecting = false;
-                    _was_connected = true;
                     _reconnect_count = 0;
                     _connection_attempt_count = 0;
                     return;
@@ -612,47 +651,6 @@ package com.gearsandcogs.utils
         {
             if (debug)
                 log("null handler: " + e.info.code + " " + (e.target as PortConnection).label);
-        }
-
-        private function handleNetStatus(e:NetStatusEvent):void
-        {
-            if (debug && e.info && e.info.code)
-                log(e.info.code);
-
-            dispatchEvent(e);
-
-            if (!auto_reconnect || !_was_connected || (e.info.code != "NetConnection.Connect.Closed" && e.info.code != "NetConnection.Connect.Failed"))
-                return;
-
-            if (reconnect_count_limit == 0 || (_reconnect_count < reconnect_count_limit))
-            {
-                if (debug)
-                    log("attempting to reconnect");
-
-                e.info.code = NETCONNECTION_RECONNECT_INIT;
-                e.info.level = "status";
-                _reconnect_count++;
-
-                var calculated_reconnect_wait:uint = (Math.min(reconnect_max_time_wait, (Math.pow(2, _reconnect_count) - 1) / 2) + Math.random()) * 1000;
-                _reconnect_timer = new Timer(calculated_reconnect_wait, 1);
-                _reconnect_timer.addEventListener(TimerEvent.TIMER_COMPLETE, function (e:TimerEvent):void
-                {
-                    connect.apply(null, [_connect_string_init].concat(_connect_params_init));
-                    _reconnect_timer = null;
-                });
-
-                _reconnect_timer.start();
-            }
-            else
-            {
-                if (debug)
-                    log("reconnect limit reached");
-
-                e.info.code = NETCONNECTION_RECONNECT_FAILED;
-                _reconnect_count = 0;
-                close();
-            }
-            dispatchEvent(e);
         }
 
         private function handleSecurityError(e:SecurityErrorEvent):void

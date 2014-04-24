@@ -30,12 +30,6 @@ package com.gearsandcogs.utils
 
         }
 
-        [Test(expects="Error")]
-        public function testInvalidPathConnect():void
-        {
-            connect("nothing");
-        }
-
         [Test(async, timeout="60000")]
         public function testConnectFail():void
         {
@@ -44,6 +38,7 @@ package com.gearsandcogs.utils
             {
                 assertEquals(e.info.code, NETCONNECTION_CONNECT_FAILED);
             }
+
             connect("1.com/no_app/");
         }
 
@@ -51,18 +46,6 @@ package com.gearsandcogs.utils
         public function testConnectSuccessNull():void
         {
             connect(null);
-        }
-
-        [Test]
-        public function testProxyType():void
-        {
-            assertNull(proxyType);
-        }
-
-        [Test]
-        public function testPortArray():void
-        {
-            assertNotNull(portArray);
         }
 
         [Test]
@@ -78,6 +61,24 @@ package com.gearsandcogs.utils
         {
             testInitConnectionTypes();
             assertTrue(initPortConnection(0) is NetConnectionType);
+        }
+
+        [Test(expects="Error")]
+        public function testInvalidPathConnect():void
+        {
+            connect("nothing");
+        }
+
+        [Test]
+        public function testPortArray():void
+        {
+            assertNotNull(portArray);
+        }
+
+        [Test]
+        public function testProxyType():void
+        {
+            assertNull(proxyType);
         }
     }
 }

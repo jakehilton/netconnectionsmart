@@ -17,11 +17,11 @@ package com.gearsandcogs.utils
         public var label:String;
         public var connection_timeout:uint = 30;
 
-        private var _connectedProxyType:String = "none";
-        private var timeoutTimer:Timer;
-
-        private var connect_init_time:Number;
-        private var status_return_time:Number;
+        private var _was_connected:Boolean;
+        private var _connected_proxy_type:String = "none";
+        private var _connect_init_time:Number;
+        private var _status_return_time:Number;
+        private var _timeoutTimer:Timer;
 
         public function PortConnection(id:int, label:String, debug:Boolean = false)
         {
@@ -34,12 +34,12 @@ package com.gearsandcogs.utils
 
         override public function get connectedProxyType():String
         {
-            return _connectedProxyType;
+            return _connected_proxy_type;
         }
 
         public function get response_time():uint
         {
-            return status_return_time - connect_init_time;
+            return _status_return_time - _connect_init_time;
         }
 
         public function get rejected():Boolean
@@ -55,13 +55,24 @@ package com.gearsandcogs.utils
             return false;
         }
 
+        public function get was_connected():Boolean
+        {
+            return _was_connected;
+        }
+
+        public function set was_connected(b:Boolean):void
+        {
+            _was_connected = b;
+        }
+
+
         override public function connect(command:String, ...parameters):void
         {
             //start a timer here so we can watch this so if it doesn't connect in time we can kill it
-            if (!timeoutTimer)
+            if (!_timeoutTimer)
             {
-                timeoutTimer = new Timer(connection_timeout * 1000, 1);
-                timeoutTimer.addEventListener(TimerEvent.TIMER_COMPLETE, function (e:TimerEvent):void
+                _timeoutTimer = new Timer(connection_timeout * 1000, 1);
+                _timeoutTimer.addEventListener(TimerEvent.TIMER_COMPLETE, function (e:TimerEvent):void
                 {
                     if (debug)
                         trace("PortConnection: connection timeout");
@@ -71,8 +82,8 @@ package com.gearsandcogs.utils
                     close();
                 });
             }
-            timeoutTimer.start();
-            connect_init_time = new Date().time;
+            _timeoutTimer.start();
+            _connect_init_time = new Date().time;
             super.connect.apply(null, [command].concat(parameters));
         }
 
@@ -94,10 +105,10 @@ package com.gearsandcogs.utils
 
         public function removeHandlers():void
         {
-            if (timeoutTimer)
-                timeoutTimer.stop();
+            if (_timeoutTimer)
+                _timeoutTimer.stop();
 
-            timeoutTimer = null;
+            _timeoutTimer = null;
 
             removeEventListener(AsyncErrorEvent.ASYNC_ERROR, handleAsyncError);
             removeEventListener(NetStatusEvent.NET_STATUS, handleNetStatus);
@@ -105,11 +116,14 @@ package com.gearsandcogs.utils
 
         private function handleNetStatus(e:NetStatusEvent):void
         {
-            timeoutTimer.stop();
-            status_return_time = new Date().time;
+            _timeoutTimer.stop();
+            _status_return_time = new Date().time;
 
             if (connected)
-                _connectedProxyType = super.connectedProxyType;
+            {
+                _was_connected = true;
+                _connected_proxy_type = super.connectedProxyType;
+            }
 
             //if rejected connection came in we want to preserve that message
             if (!status || (status && status.info.code != "NetConnection.Connect.Rejected"))
