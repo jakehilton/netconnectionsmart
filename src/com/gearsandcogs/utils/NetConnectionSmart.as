@@ -15,8 +15,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- VERSION: 1.2.2
- DATE: 04/24/2014
+ VERSION: 1.2.3
+ DATE: 04/28/2014
  ACTIONSCRIPT VERSION: 3.0
  DESCRIPTION:
  A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port and protocol.
@@ -117,7 +117,7 @@ package com.gearsandcogs.utils
         private static const RTMFP:String = "rtmfp";
         private static const RTMP:String = "rtmp";
         private static const RTMPT:String = "rtmpt";
-        public static const VERSION:String = "NetConnectionSmart v 1.2.2";
+        public static const VERSION:String = "NetConnectionSmart v 1.2.3";
         public var append_guid:Boolean;
         public var auto_reconnect:Boolean;
         public var default_port_only:Boolean;
@@ -538,7 +538,10 @@ package com.gearsandcogs.utils
 
             dispatchEvent(e);
 
-            if (!auto_reconnect || !_nc.was_connected || (e.info.code != "NetConnection.Connect.Closed" && e.info.code != "NetConnection.Connect.Failed"))
+            if (!auto_reconnect ||
+                !_nc ||
+                !_nc.was_connected ||
+                (e.info.code != "NetConnection.Connect.Closed" && e.info.code != "NetConnection.Connect.Failed"))
                 return;
 
             if (reconnect_count_limit == 0 || (_reconnect_count < reconnect_count_limit))
