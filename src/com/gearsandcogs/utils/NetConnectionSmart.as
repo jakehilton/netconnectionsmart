@@ -117,7 +117,7 @@ package com.gearsandcogs.utils
         private static const RTMFP:String = "rtmfp";
         private static const RTMP:String = "rtmp";
         private static const RTMPT:String = "rtmpt";
-        public static const VERSION:String = "NetConnectionSmart v 1.3.1";
+        public static const VERSION:String = "NetConnectionSmart v 1.3.2";
 
         public var append_guid:Boolean;
         public var auto_reconnect:Boolean;
@@ -417,23 +417,25 @@ package com.gearsandcogs.utils
             if (skip_tunneling && force_tunneling)
                 throw(new Error("Cannot force tunneling and skip tunneling. Please choose one or the other."));
 
-            var _ncTmpArray:Array = [];
+            var rtmfpArray:Array = [];
+            var rtmpArray:Array = [];
+            var rtmpConnectArray:Array = [];
+            var rtmptArray:Array = [];
+
             for each(var r:String in _portArray)
             {
                 if (!force_tunneling)
                 {
                     if (proxyType == "none")
-                        _ncTmpArray.push(new NetConnectionType(RTMP, r, encrypted ? "e" : secure ? "s" : "", "CONNECTonly"));
-                    _ncTmpArray.push(new NetConnectionType(RTMP, r, encrypted ? "e" : secure ? "s" : "", proxyType));
+                        rtmpConnectArray.push(new NetConnectionType(RTMP, r, encrypted ? "e" : secure ? "s" : "", "CONNECTonly"));
+                    rtmpArray.push(new NetConnectionType(RTMP, r, encrypted ? "e" : secure ? "s" : "", proxyType));
                 }
                 if (enable_rtmfp)
-                    _ncTmpArray.push(new NetConnectionType(RTMFP, r));
+                    rtmfpArray.push(new NetConnectionType(RTMFP, r));
                 if (!skip_tunneling && !secure)
-                    _ncTmpArray.push(new NetConnectionType(RTMPT, r, encrypted ? "e" : "", proxyType == "none" ? "best" : proxyType));
+                    rtmptArray.push(new NetConnectionType(RTMPT, r, encrypted ? "e" : "", proxyType == "none" ? "best" : proxyType));
             }
-
-            _ncTmpArray.sortOn(["protocol", "proxyType", "port"], [Array.CASEINSENSITIVE, Array.DESCENDING, Array.NUMERIC]);
-            _ncTypes = Vector.<NetConnectionType>(_ncTmpArray);
+            _ncTypes = Vector.<NetConnectionType>([].concat(rtmfpArray, rtmpArray, rtmpConnectArray, rtmptArray));
         }
 
         protected function initPortConnection(nc_num:uint):NetConnectionType
