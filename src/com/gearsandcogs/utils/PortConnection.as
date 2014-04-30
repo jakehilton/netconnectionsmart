@@ -65,7 +65,6 @@ package com.gearsandcogs.utils
             _was_connected = b;
         }
 
-
         override public function connect(command:String, ...parameters):void
         {
             //start a timer here so we can watch this so if it doesn't connect in time we can kill it

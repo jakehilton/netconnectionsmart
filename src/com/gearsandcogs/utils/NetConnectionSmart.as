@@ -15,8 +15,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- VERSION: 1.2.3
- DATE: 04/28/2014
+ VERSION: 1.2.4
+ DATE: 04/30/2014
  ACTIONSCRIPT VERSION: 3.0
  DESCRIPTION:
  A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port and protocol.
@@ -117,7 +117,7 @@ package com.gearsandcogs.utils
         private static const RTMFP:String = "rtmfp";
         private static const RTMP:String = "rtmp";
         private static const RTMPT:String = "rtmpt";
-        public static const VERSION:String = "NetConnectionSmart v 1.2.3";
+        public static const VERSION:String = "NetConnectionSmart v 1.2.4";
 
         public var append_guid:Boolean;
         public var auto_reconnect:Boolean;
@@ -247,7 +247,7 @@ package com.gearsandcogs.utils
          */
         public function get proxyType():String
         {
-            return _nc ? _nc.proxyType : null;
+            return _nc ? _nc.proxyType : "none";
         }
 
         /**
@@ -417,29 +417,24 @@ package com.gearsandcogs.utils
             if (skip_tunneling && force_tunneling)
                 throw(new Error("Cannot force tunneling and skip tunneling. Please choose one or the other."));
 
-            _ncTypes = new Vector.<NetConnectionType>();
+            var _ncTmpArray:Array = [];
             for each(var r:String in _portArray)
             {
                 if (!force_tunneling)
-                    _ncTypes.unshift(new NetConnectionType(RTMP, r, encrypted ? "e" : secure ? "s" : ""));
+                {
+                    if (proxyType == "none")
+                        _ncTmpArray.push(new NetConnectionType(RTMP, r, encrypted ? "e" : secure ? "s" : "", "CONNECTonly"));
+                    _ncTmpArray.push(new NetConnectionType(RTMP, r, encrypted ? "e" : secure ? "s" : "", proxyType));
+                }
                 if (enable_rtmfp)
-                    _ncTypes.unshift(new NetConnectionType(RTMFP, r));
+                    _ncTmpArray.push(new NetConnectionType(RTMFP, r));
                 if (!skip_tunneling && !secure)
-                    _ncTypes.push(new NetConnectionType(RTMPT, r, encrypted ? "e" : ""));
+                    _ncTmpArray.push(new NetConnectionType(RTMPT, r, encrypted ? "e" : "", proxyType == "none" ? "best" : proxyType));
             }
 
-            _ncTypes.sort(function (a:NetConnectionType, b:NetConnectionType):Number
-            {
-                var return_val:int = 1;
-                if (a.protocol == b.protocol)
-                    return_val = (a.port == portArray[0].toString() ? -1 : b.port == portArray[0].toString() ? 1 : 0);
-                else if (a.protocol == RTMFP && b.protocol != RTMFP)
-                    return_val = -1;
-                else if (a.protocol == RTMP && b.protocol != RTMFP)
-                    return_val = -1;
-
-                return return_val;
-            });
+            _ncTmpArray.sortOn(["protocol", "proxyType", "port"], [Array.CASEINSENSITIVE, Array.DESCENDING, Array.NUMERIC]);
+            _ncTypes = Vector.<NetConnectionType>(_ncTmpArray);
+            ;
         }
 
         protected function initPortConnection(nc_num:uint):NetConnectionType
@@ -452,7 +447,7 @@ package com.gearsandcogs.utils
 
             curr_pc.connection_timeout = connection_timeout;
             curr_pc.objectEncoding = _object_encoding;
-            curr_pc.proxyType = _proxy_type;
+            curr_pc.proxyType = curr_nct.proxyType;
 
             curr_pc.client = _ncClient;
             curr_pc.addEventListener(PortConnection.STATUS_UPDATE, checkNetStatus);
@@ -556,7 +551,7 @@ package com.gearsandcogs.utils
             var portpass:String = port != "default" ? ":" + port : "";
 
             if (debug)
-                log("connecting to: " + protocol + "://" + _server_string + portpass + _app_string);
+                log("connecting to: " + protocol + "://" + _server_string + portpass + _app_string + " with proxyType: " + connection.proxyType);
 
             connection.connect.apply(null, [protocol + "://" +
                 _server_string + portpass + _app_string].concat(parameters));
@@ -569,9 +564,7 @@ package com.gearsandcogs.utils
 
             dispatchEvent(e);
 
-            if (!auto_reconnect ||
-                !_nc ||
-                !_nc.was_connected ||
+            if (!auto_reconnect || !_nc || !_nc.was_connected ||
                 (e.info.code != "NetConnection.Connect.Closed" && e.info.code != "NetConnection.Connect.Failed"))
                 return;
 

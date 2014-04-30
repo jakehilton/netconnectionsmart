@@ -7,7 +7,6 @@ package com.gearsandcogs.utils
 
     import org.flexunit.asserts.assertEquals;
     import org.flexunit.asserts.assertNotNull;
-    import org.flexunit.asserts.assertNull;
     import org.flexunit.asserts.assertTrue;
     import org.flexunit.async.Async;
 
@@ -48,6 +47,22 @@ package com.gearsandcogs.utils
             connect(null);
         }
 
+        [Test(expects="Error")]
+        public function testIncompatibleSecureForceTunneling():void
+        {
+            secure = true;
+            force_tunneling = true;
+            connect("wowzaec2demo.streamlock.net/vod/");
+        }
+
+        [Test(expects="Error")]
+        public function testIncompatibleSkipTunnelingForceTunneling():void
+        {
+            skip_tunneling = true;
+            force_tunneling = true;
+            connect("wowzaec2demo.streamlock.net/vod/");
+        }
+
         [Test]
         public function testInitConnectionTypes():void
         {
@@ -66,7 +81,7 @@ package com.gearsandcogs.utils
         [Test(expects="Error")]
         public function testInvalidPathConnect():void
         {
-            connect("nothing");
+            connect("invalidpath.com");
         }
 
         [Test]
@@ -78,7 +93,7 @@ package com.gearsandcogs.utils
         [Test]
         public function testProxyType():void
         {
-            assertNull(proxyType);
+            assertEquals(proxyType, "none");
         }
     }
 }
