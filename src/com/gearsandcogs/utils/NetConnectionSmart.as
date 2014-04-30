@@ -15,7 +15,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- VERSION: 1.2.4
+ VERSION: 1.3.1
  DATE: 04/30/2014
  ACTIONSCRIPT VERSION: 3.0
  DESCRIPTION:
@@ -117,7 +117,7 @@ package com.gearsandcogs.utils
         private static const RTMFP:String = "rtmfp";
         private static const RTMP:String = "rtmp";
         private static const RTMPT:String = "rtmpt";
-        public static const VERSION:String = "NetConnectionSmart v 1.2.4";
+        public static const VERSION:String = "NetConnectionSmart v 1.3.1";
 
         public var append_guid:Boolean;
         public var auto_reconnect:Boolean;
@@ -247,7 +247,7 @@ package com.gearsandcogs.utils
          */
         public function get proxyType():String
         {
-            return _nc ? _nc.proxyType : "none";
+            return _nc ? _nc.proxyType : _proxy_type;
         }
 
         /**
@@ -434,7 +434,6 @@ package com.gearsandcogs.utils
 
             _ncTmpArray.sortOn(["protocol", "proxyType", "port"], [Array.CASEINSENSITIVE, Array.DESCENDING, Array.NUMERIC]);
             _ncTypes = Vector.<NetConnectionType>(_ncTmpArray);
-            ;
         }
 
         protected function initPortConnection(nc_num:uint):NetConnectionType
