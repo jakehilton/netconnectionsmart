@@ -162,7 +162,7 @@ package com.gearsandcogs.utils
          */
         public function NetConnectionSmart()
         {
-            _nc_client = new Object();
+            _nc_client = {};
             _guid = GUID.create();
         }
 
@@ -221,6 +221,9 @@ package com.gearsandcogs.utils
             return _guid;
         }
 
+        /**
+         * @see flash.net.NetConnection.objectEncoding
+         */
         public function get objectEncoding():uint
         {
             return _nc ? _nc.objectEncoding : _object_encoding;
@@ -238,49 +241,75 @@ package com.gearsandcogs.utils
             return _nc.uri.substring(0, _nc.uri.indexOf("://"));
         }
 
+        /**
+         * @see flash.net.NetConnection.proxyType
+         */
         public function get proxyType():String
         {
             return _nc ? _nc.proxyType : null;
         }
 
-        public function set proxyType(type:String):void
+        /**
+         * @see flash.net.NetConnection.connectedProxyType
+         */
+        public function set proxyType(proxy_type:String):void
         {
-            _proxy_type = type;
+            _proxy_type = proxy_type;
         }
 
+        /**
+         * @see flash.net.NetConnection.connectedProxyType
+         */
         public function get connectedProxyType():String
         {
             return _nc.connectedProxyType;
         }
 
+        /**
+         * @see flash.net.NetConnection.uri
+         */
         public function get uri():String
         {
             return _nc.uri;
         }
 
+        /**
+         * @see flash.net.NetConnection.usingTLS
+         */
         public function get usingTLS():Boolean
         {
             return _nc.usingTLS;
         }
 
+        /**
+         * array of uints which specify which ports to use during the connection sequence
+         */
         public function get portArray():Array
         {
             return _portArray;
         }
 
+        /**
+         * Used to update/instantiate which ports will be used during the connection sequence.
+         * @param portArray
+         */
         public function set portArray(portArray:Array):void
         {
             _portArray = portArray;
             initConnectionTypes();
         }
 
+        /**
+         * @return Vector of NetConnectionTypes
+         * @see com.gearsandcogs.utils.NetConnectionType
+         */
         public function get netConnections():Vector.<NetConnectionType>
         {
             return _ncTypes;
         }
 
         /**
-         * @copy NetConnection#call
+         * @see flash.net.NetConnection.call
          */
         public function call(command:String, responder:Responder = null, ...parameters):void
         {
@@ -290,6 +319,13 @@ package com.gearsandcogs.utils
             _nc.call.apply(null, [command, responder].concat(parameters));
         }
 
+        /**
+         * Used to close the current active netconnection.
+         * Supports a close command which simulates a server disconnect. This can
+         * be useful when trying to debug/test a server reconnect logic block
+         * @param is_dirty
+         * @see flash.net.NetConnection.close
+         */
         public function close(is_dirty:Boolean = false):void
         {
             if (!is_dirty)
@@ -312,7 +348,9 @@ package com.gearsandcogs.utils
         }
 
         /**
-         * @copy NetConnection#connect
+         * Kicks off the connection sequence for all ports
+         * specified in the port array as well as for allowed protocols.
+         * @see flash.net.NetConnection.connect
          */
         public function connect(command:String, ...parameters):void
         {
@@ -509,14 +547,6 @@ package com.gearsandcogs.utils
             dispatchEvent(new MsgEvent(MSG_EVT, false, false, msg));
         }
 
-        /**
-         *
-         * @param netconnection
-         * @param protocol
-         * @param port
-         * @param parameters
-         *
-         */
         private function processConnection(connection:PortConnection, protocol:String, port:String, parameters:Array):void
         {
             if (default_port_only && port != "default")
@@ -582,7 +612,7 @@ package com.gearsandcogs.utils
             if (debug)
                 log(target_connection.label + ": " + target_connection.status.info.code);
 
-            var status_count:uint;
+            var status_count:uint = 0;
             var rejected_connection:PortConnection;
 
             for each(var i:NetConnectionType in _ncTypes)

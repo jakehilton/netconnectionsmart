@@ -1,5 +1,8 @@
 package com.gearsandcogs.utils
 {
+    /**
+     * Container object for managing a netconnection
+     */
     public class NetConnectionType
     {
         public var connection:PortConnection;
