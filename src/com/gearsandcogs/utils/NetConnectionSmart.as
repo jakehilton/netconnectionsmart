@@ -118,6 +118,7 @@ package com.gearsandcogs.utils
         private static const RTMP:String = "rtmp";
         private static const RTMPT:String = "rtmpt";
         public static const VERSION:String = "NetConnectionSmart v 1.2.3";
+
         public var append_guid:Boolean;
         public var auto_reconnect:Boolean;
         public var default_port_only:Boolean;
@@ -139,20 +140,20 @@ package com.gearsandcogs.utils
 
         protected var _ncTypes:Vector.<NetConnectionType>;
 
-        private var _connect_params:Array;
-        private var _connect_params_init:Array;
+        private var _connectParams:Array;
+        private var _connectParamsInit:Array;
         private var _portArray:Array = [443, 80, 1935];
         private var _initial_connect_run:Boolean;
         private var _is_connecting:Boolean;
-        private var _nc_client:Object;
+        private var _ncClient:Object;
         private var _nc:PortConnection;
         private var _app_string:String;
         private var _connect_string_init:String;
         private var _guid:String;
         private var _proxy_type:String = "none";
         private var _server_string:String;
-        private var _connect_timer:Timer;
-        private var _reconnect_timer:Timer;
+        private var _connectTimer:Timer;
+        private var _reconnectTimer:Timer;
         private var _connection_attempt_count:uint;
         private var _object_encoding:uint = ObjectEncoding.AMF3;
         private var _reconnect_count:uint;
@@ -162,7 +163,7 @@ package com.gearsandcogs.utils
          */
         public function NetConnectionSmart()
         {
-            _nc_client = {};
+            _ncClient = {};
             _guid = GUID.create();
         }
 
@@ -171,7 +172,7 @@ package com.gearsandcogs.utils
          */
         public function set client(obj:Object):void
         {
-            _nc_client = obj;
+            _ncClient = obj;
         }
 
         /**
@@ -208,12 +209,12 @@ package com.gearsandcogs.utils
 
         public function get connectParams():Array
         {
-            return _connect_params_init;
+            return _connectParamsInit;
         }
 
         public function set connectParams(paramArray:Array):void
         {
-            _connect_params_init = paramArray;
+            _connectParamsInit = paramArray;
         }
 
         public function get guid():String
@@ -331,10 +332,10 @@ package com.gearsandcogs.utils
             if (!is_dirty)
                 _nc.was_connected = false;
 
-            if (_reconnect_timer)
+            if (_reconnectTimer)
             {
-                _reconnect_timer.stop();
-                _reconnect_timer = null;
+                _reconnectTimer.stop();
+                _reconnectTimer = null;
             }
 
             if (_nc)
@@ -390,8 +391,8 @@ package com.gearsandcogs.utils
 
             initConnectionTypes();
 
-            _connect_params_init = parameters;
-            _connect_params = append_guid ? parameters.concat(_guid) : parameters;
+            _connectParamsInit = parameters;
+            _connectParams = append_guid ? parameters.concat(_guid) : parameters;
             _server_string = _connect_string_init.substring(0, _connect_string_init.indexOf("/"));
             _app_string = _connect_string_init.substring(_connect_string_init.indexOf("/"));
             _initial_connect_run = true;
@@ -453,7 +454,7 @@ package com.gearsandcogs.utils
             curr_pc.objectEncoding = _object_encoding;
             curr_pc.proxyType = _proxy_type;
 
-            curr_pc.client = _nc_client;
+            curr_pc.client = _ncClient;
             curr_pc.addEventListener(PortConnection.STATUS_UPDATE, checkNetStatus);
             curr_nct.connection = curr_pc;
 
@@ -472,10 +473,10 @@ package com.gearsandcogs.utils
             _nc.addEventListener(NetStatusEvent.NET_STATUS, handleNetStatus);
             _nc.addEventListener(SecurityErrorEvent.SECURITY_ERROR, handleSecurityError);
 
-            _nc.client = _nc_client;
+            _nc.client = _ncClient;
 
-            if (_connect_timer)
-                _connect_timer.stop();
+            if (_connectTimer)
+                _connectTimer.stop();
 
             closeExtraNc();
         }
@@ -511,8 +512,8 @@ package com.gearsandcogs.utils
             //all connection attempts have been tried
             if (connect_count >= _ncTypes.length)
             {
-                if (_connect_timer)
-                    _connect_timer.stop();
+                if (_connectTimer)
+                    _connectTimer.stop();
                 return;
             }
 
@@ -520,7 +521,7 @@ package com.gearsandcogs.utils
             var curr_nct:NetConnectionType = initPortConnection(connect_count);
 
             if (!curr_nct.connection.status)
-                processConnection(curr_nct.connection, curr_nct.full_protocol, curr_nct.port, _connect_params);
+                processConnection(curr_nct.connection, curr_nct.full_protocol, curr_nct.port, _connectParams);
         }
 
         private function initializeTimers():void
@@ -528,16 +529,16 @@ package com.gearsandcogs.utils
             if (debug)
                 log("Connecting at a rate of: " + connection_rate);
 
-            if (_connect_timer)
-                _connect_timer.stop();
+            if (_connectTimer)
+                _connectTimer.stop();
 
-            _connect_timer = new Timer(connection_rate);
-            _connect_timer.addEventListener(TimerEvent.TIMER, function (e:TimerEvent):void
+            _connectTimer = new Timer(connection_rate);
+            _connectTimer.addEventListener(TimerEvent.TIMER, function (e:TimerEvent):void
             {
-                initConnection(_connect_timer.currentCount - 1);
+                initConnection(_connectTimer.currentCount - 1);
             });
 
-            _connect_timer.start();
+            _connectTimer.start();
         }
 
         private function log(msg:String):void
@@ -584,14 +585,14 @@ package com.gearsandcogs.utils
                 _reconnect_count++;
 
                 var calculated_reconnect_wait:uint = (Math.min(reconnect_max_time_wait, (Math.pow(2, _reconnect_count) - 1) / 2) + Math.random()) * 1000;
-                _reconnect_timer = new Timer(calculated_reconnect_wait, 1);
-                _reconnect_timer.addEventListener(TimerEvent.TIMER_COMPLETE, function (e:TimerEvent):void
+                _reconnectTimer = new Timer(calculated_reconnect_wait, 1);
+                _reconnectTimer.addEventListener(TimerEvent.TIMER_COMPLETE, function (e:TimerEvent):void
                 {
-                    connect.apply(null, [_connect_string_init].concat(_connect_params_init));
-                    _reconnect_timer = null;
+                    connect.apply(null, [_connect_string_init].concat(_connectParamsInit));
+                    _reconnectTimer = null;
                 });
 
-                _reconnect_timer.start();
+                _reconnectTimer.start();
             }
             else
             {
