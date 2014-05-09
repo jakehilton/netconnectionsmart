@@ -20,7 +20,6 @@ package com.gearsandcogs.utils
         [Before]
         public function setUp():void
         {
-            trace("setup ran");
         }
 
         [After]
@@ -45,6 +44,12 @@ package com.gearsandcogs.utils
         public function testConnectSuccessNull():void
         {
             connect(null);
+        }
+
+        [Test]
+        public function testCloseNoCrash():void
+        {
+            close();
         }
 
         [Test(expects="Error")]

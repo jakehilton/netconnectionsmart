@@ -17,6 +17,7 @@ package com.gearsandcogs.utils
         public var label:String;
         public var connection_timeout:uint = 30;
 
+        private var _internal_event_handlers_deactivated:Boolean;
         private var _was_connected:Boolean;
         private var _connected_proxy_type:String = "none";
         private var _connect_init_time:Number;
@@ -74,11 +75,10 @@ package com.gearsandcogs.utils
                 _timeoutTimer.addEventListener(TimerEvent.TIMER_COMPLETE, function (e:TimerEvent):void
                 {
                     if (debug)
-                        trace("PortConnection: connection timeout");
+                        log("connection timeout");
 
                     handleNetStatus(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false, {code: "NetConnection.Connect.Failed"}));
-                    removeHandlers();
-                    close();
+                    deactivateHandlers();
                 });
             }
             _timeoutTimer.start();
@@ -92,6 +92,15 @@ package com.gearsandcogs.utils
             addEventListener(NetStatusEvent.NET_STATUS, handleNetStatus);
         }
 
+        public function deactivateHandlers():void
+        {
+            if (_timeoutTimer)
+                _timeoutTimer.stop();
+
+            _timeoutTimer = null;
+            _internal_event_handlers_deactivated = true;
+        }
+
         public function getProtocol():String
         {
             return uri.substring(0, uri.indexOf("://"));
@@ -102,19 +111,16 @@ package com.gearsandcogs.utils
             //don't do anything
         }
 
-        public function removeHandlers():void
+        private function log(msg:String):void
         {
-            if (_timeoutTimer)
-                _timeoutTimer.stop();
-
-            _timeoutTimer = null;
-
-            removeEventListener(AsyncErrorEvent.ASYNC_ERROR, handleAsyncError);
-            removeEventListener(NetStatusEvent.NET_STATUS, handleNetStatus);
+            trace("PortConnection: " + msg);
         }
 
         private function handleNetStatus(e:NetStatusEvent):void
         {
+            if (_internal_event_handlers_deactivated)
+                return;
+
             _timeoutTimer.stop();
             _status_return_time = new Date().time;
 
@@ -128,7 +134,7 @@ package com.gearsandcogs.utils
             if (!status || (status && status.info.code != "NetConnection.Connect.Rejected"))
             {
                 if (debug)
-                    trace("PortConnection " + label + " " + e.info.code);
+                    log(label + " " + e.info.code);
                 status = e;
 
                 //hack alert..
@@ -144,8 +150,11 @@ package com.gearsandcogs.utils
 
         private function handleAsyncError(e:AsyncErrorEvent):void
         {
+            if (_internal_event_handlers_deactivated)
+                return;
+
             if (debug)
-                trace("PortConnection: " + e.toString());
+                log(e.toString());
         }
     }
 }

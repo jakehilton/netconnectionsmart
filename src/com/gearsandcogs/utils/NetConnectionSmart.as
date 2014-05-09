@@ -15,8 +15,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- VERSION: 1.3.2
- DATE: 04/30/2014
+ VERSION: 1.3.3
+ DATE: 05/09/2014
  ACTIONSCRIPT VERSION: 3.0
  DESCRIPTION:
  A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port and protocol.
@@ -117,7 +117,7 @@ package com.gearsandcogs.utils
         private static const RTMFP:String = "rtmfp";
         private static const RTMP:String = "rtmp";
         private static const RTMPT:String = "rtmpt";
-        public static const VERSION:String = "NetConnectionSmart v 1.3.2";
+        public static const VERSION:String = "NetConnectionSmart v 1.3.3";
 
         public var append_guid:Boolean;
         public var auto_reconnect:Boolean;
@@ -329,17 +329,19 @@ package com.gearsandcogs.utils
          */
         public function close(is_dirty:Boolean = false):void
         {
-            if (!is_dirty)
-                _nc.was_connected = false;
-
             if (_reconnectTimer)
             {
                 _reconnectTimer.stop();
                 _reconnectTimer = null;
             }
 
-            if (_nc)
-                _nc.close();
+            if (!_nc)
+                return;
+
+            if (!is_dirty)
+                _nc.was_connected = false;
+
+            _nc.close();
 
             if (is_dirty)
                 return;
@@ -462,7 +464,7 @@ package com.gearsandcogs.utils
             _nc = portConnection;
 
             _nc.removeEventListener(PortConnection.STATUS_UPDATE, checkNetStatus);
-            _nc.removeHandlers();
+            _nc.deactivateHandlers();
 
             _nc.addEventListener(AsyncErrorEvent.ASYNC_ERROR, handleAsyncError);
             _nc.addEventListener(IOErrorEvent.IO_ERROR, handleIoError);
@@ -487,7 +489,7 @@ package com.gearsandcogs.utils
             pc.close();
 
             //cleanup listener
-            pc.removeHandlers();
+            pc.deactivateHandlers();
         }
 
         private function closeExtraNc():void
@@ -622,7 +624,6 @@ package com.gearsandcogs.utils
 
                 if (port_test)
                 {
-                    dispatchEvent(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false, {code: NETCONNECTION_PORT_TEST_UPDATE}));
                     if (curr_connection.connected)
                         closeDownNc(curr_connection);
                 }
@@ -638,6 +639,9 @@ package com.gearsandcogs.utils
                 else if (!rejected_connection && curr_connection.rejected)
                     rejected_connection = curr_connection;
             }
+
+            if (port_test)
+                dispatchEvent(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false, {code: NETCONNECTION_PORT_TEST_UPDATE}));
 
             //if no success at all return the first rejected message or
             //return the status of the first connection in the array
