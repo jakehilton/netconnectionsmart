@@ -15,7 +15,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- VERSION: 1.3.3
+ VERSION: 1.3.4
  DATE: 05/09/2014
  ACTIONSCRIPT VERSION: 3.0
  DESCRIPTION:
@@ -117,7 +117,7 @@ package com.gearsandcogs.utils
         private static const RTMFP:String = "rtmfp";
         private static const RTMP:String = "rtmp";
         private static const RTMPT:String = "rtmpt";
-        public static const VERSION:String = "NetConnectionSmart v 1.3.3";
+        public static const VERSION:String = "NetConnectionSmart v 1.3.4";
 
         public var append_guid:Boolean;
         public var auto_reconnect:Boolean;
@@ -138,6 +138,7 @@ package com.gearsandcogs.utils
         public var reconnect_count_limit:uint = 10;
         public var reconnect_max_time_wait:uint = 10;
 
+        protected var _connect_string_init:String;
         protected var _ncTypes:Vector.<NetConnectionType>;
 
         private var _connectParams:Array;
@@ -145,10 +146,10 @@ package com.gearsandcogs.utils
         private var _portArray:Array = [443, 80, 1935];
         private var _initial_connect_run:Boolean;
         private var _is_connecting:Boolean;
+        private var _was_connected:Boolean;
         private var _ncClient:Object;
         private var _nc:PortConnection;
         private var _app_string:String;
-        private var _connect_string_init:String;
         private var _guid:String;
         private var _proxy_type:String = "none";
         private var _server_string:String;
@@ -339,7 +340,10 @@ package com.gearsandcogs.utils
                 return;
 
             if (!is_dirty)
+            {
+                _was_connected = false;
                 _nc.was_connected = false;
+            }
 
             _nc.close();
 
@@ -567,8 +571,7 @@ package com.gearsandcogs.utils
 
             dispatchEvent(e);
 
-            if (!auto_reconnect || !_nc || !_nc.was_connected ||
-                (e.info.code != "NetConnection.Connect.Closed" && e.info.code != "NetConnection.Connect.Failed"))
+            if (!auto_reconnect || !_was_connected || (e.info.code != "NetConnection.Connect.Closed" && e.info.code != "NetConnection.Connect.Failed"))
                 return;
 
             if (reconnect_count_limit == 0 || (_reconnect_count < reconnect_count_limit))
@@ -629,11 +632,12 @@ package com.gearsandcogs.utils
                 }
                 else if (!connected && curr_connection.connected)
                 {
-                    acceptNc(curr_connection);
-                    handleNetStatus(curr_connection.status);
                     _is_connecting = false;
+                    _was_connected = true;
                     _reconnect_count = 0;
                     _connection_attempt_count = 0;
+                    acceptNc(curr_connection);
+                    handleNetStatus(curr_connection.status);
                     return;
                 }
                 else if (!rejected_connection && curr_connection.rejected)
