@@ -38,6 +38,11 @@ package com.gearsandcogs.utils
             return _connected_proxy_type;
         }
 
+        public function set connectedProxyType(s:String):void
+        {
+            _connected_proxy_type = s;
+        }
+
         public function get rejected():Boolean
         {
             try
@@ -121,8 +126,8 @@ package com.gearsandcogs.utils
 
             if (connected)
             {
-                _was_connected = true;
-                _connected_proxy_type = super.connectedProxyType;
+                was_connected = true;
+                connectedProxyType = super.connectedProxyType;
             }
 
             //if rejected connection came in we want to preserve that message
