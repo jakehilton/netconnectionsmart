@@ -15,8 +15,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- VERSION: 1.4.0
- DATE: 06/02/2014
+ VERSION: 1.5.0
+ DATE: 07/15/2014
  ACTIONSCRIPT VERSION: 3.0
  DESCRIPTION:
  A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port and protocol.
@@ -100,6 +100,7 @@ package com.gearsandcogs.utils
     import flash.net.NetConnection;
     import flash.net.ObjectEncoding;
     import flash.net.Responder;
+    import flash.utils.ByteArray;
     import flash.utils.Timer;
 
     public class NetConnectionSmart extends EventDispatcher
@@ -308,6 +309,18 @@ package com.gearsandcogs.utils
         public function get netConnections():Vector.<NetConnectionType>
         {
             return _ncTypes;
+        }
+
+        /**
+         *
+         * @return Raw Object with parsed netconnection information for each NetConnectionType
+         */
+        public function getNetConnectionsInfo():Object
+        {
+            var myBA:ByteArray = new ByteArray();
+            myBA.writeObject( netConnections );
+            myBA.position = 0;
+            return( myBA.readObject() );
         }
 
         public function get was_connected():Boolean
