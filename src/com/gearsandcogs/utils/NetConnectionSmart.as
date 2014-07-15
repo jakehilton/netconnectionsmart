@@ -15,7 +15,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- VERSION: 1.5.0
+ VERSION: 1.5.1
  DATE: 07/15/2014
  ACTIONSCRIPT VERSION: 3.0
  DESCRIPTION:
@@ -118,7 +118,7 @@ package com.gearsandcogs.utils
         private static const RTMFP:String = "rtmfp";
         private static const RTMP:String = "rtmp";
         private static const RTMPT:String = "rtmpt";
-        public static const VERSION:String = "NetConnectionSmart v 1.4.0";
+        public static const VERSION:String = "NetConnectionSmart v 1.5.1";
 
         public var append_guid:Boolean;
         public var auto_reconnect:Boolean;
@@ -315,7 +315,7 @@ package com.gearsandcogs.utils
          *
          * @return Raw Object with parsed netconnection information for each NetConnectionType
          */
-        public function get netConnectionsInfo():Object
+        public function get netConnectionsInfo():Vector.<Object>
         {
             var myBA:ByteArray = new ByteArray();
             myBA.writeObject( netConnections );

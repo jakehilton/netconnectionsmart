@@ -14,6 +14,7 @@ package com.gearsandcogs.utils
         public var debug:Boolean;
         public var id:int;
         public var status:NetStatusEvent;
+        public var response_time:Number;
         public var label:String;
         public var connection_timeout:uint = 30;
 
@@ -21,7 +22,6 @@ package com.gearsandcogs.utils
         private var _was_connected:Boolean;
         private var _connected_proxy_type:String = "none";
         private var _connect_init_time:Number;
-        private var _status_return_time:Number;
         private var _timeoutTimer:Timer;
 
         public function PortConnection(id:int, label:String, debug:Boolean = false)
@@ -36,11 +36,6 @@ package com.gearsandcogs.utils
         override public function get connectedProxyType():String
         {
             return _connected_proxy_type;
-        }
-
-        public function get response_time():uint
-        {
-            return _status_return_time - _connect_init_time;
         }
 
         public function get rejected():Boolean
@@ -122,7 +117,7 @@ package com.gearsandcogs.utils
                 return;
 
             _timeoutTimer.stop();
-            _status_return_time = new Date().time;
+            response_time = new Date().time - _connect_init_time;
 
             if (connected)
             {
