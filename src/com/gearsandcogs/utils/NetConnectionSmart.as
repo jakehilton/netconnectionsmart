@@ -315,7 +315,7 @@ package com.gearsandcogs.utils
          *
          * @return Raw Object with parsed netconnection information for each NetConnectionType
          */
-        public function getNetConnectionsInfo():Object
+        public function get netConnectionsInfo():Object
         {
             var myBA:ByteArray = new ByteArray();
             myBA.writeObject( netConnections );
