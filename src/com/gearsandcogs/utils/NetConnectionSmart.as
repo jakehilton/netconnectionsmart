@@ -15,8 +15,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- VERSION: 1.6.0
- DATE: 07/17/2014
+ VERSION: 1.7.0
+ DATE: 08/11/2014
  ACTIONSCRIPT VERSION: 3.0
  DESCRIPTION:
  A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port and protocol.
@@ -32,10 +32,11 @@
  recreate_guid: a boolean to enable the recreation of the GUID each time the main connect method is called. By default this is false.
  auto_reconnect: a boolean to enable or disable automatic reconnect attempts. By default this is set to false.
  connection_rate: only applicable if using a non-shotgun approach. Sets the rate that connections are tried. By default this is 200ms
- connection_timeout: the number of seconds to wait for a connection to succeed before it's deemmed faulty.
+ connection_timeout: the number of seconds to wait for a connection to succeed before it's deemed faulty.
  debug: if you want to see debug messages via your trace panel
  enable_rtmfp: puts rtmfp into the list of attempted protocols. By default this is set to false because it can cause slow timeouts when used with sequential connect
  encrypted: used if you want to force the use of an encrypted connection (rtmp(t)e)
+ secure: used if you want to force the use of an SSL connection (rtmps). Not compatible with force_tunneling.
  force_tunneling: used if you don't ever want to attempt rtmp connections
  skip_tunneling: used if you don't ever want to attempt rtmpt connections
  reconnect_count_limit: specify the max amount of reconnect attempts are made. If set to 0 reconnect attempts will occur indefinitely. Default is 10.
@@ -118,7 +119,7 @@ package com.gearsandcogs.utils
         private static const RTMFP:String = "rtmfp";
         private static const RTMP:String = "rtmp";
         private static const RTMPT:String = "rtmpt";
-        public static const VERSION:String = "NetConnectionSmart v 1.6.0";
+        public static const VERSION:String = "NetConnectionSmart v 1.7.0";
 
         public var append_guid:Boolean;
         public var auto_reconnect:Boolean;
@@ -193,6 +194,14 @@ package com.gearsandcogs.utils
             return false;
         }
 
+        private function parseObj(obj:*):Object
+        {
+            var myBA:ByteArray = new ByteArray();
+            myBA.writeObject(obj);
+            myBA.position = 0;
+            return( myBA.readObject() );
+        }
+
         /**
          * @return A boolean whether the active netconnection is connecting
          */
@@ -214,10 +223,7 @@ package com.gearsandcogs.utils
          */
         public function get connectionInfo():Object
         {
-            var myBA:ByteArray = new ByteArray();
-            myBA.writeObject( connection );
-            myBA.position = 0;
-            return( myBA.readObject() );
+            return parseObj(connection);
         }
 
         public function get connectParams():Array
@@ -250,9 +256,14 @@ package com.gearsandcogs.utils
                 _nc.objectEncoding = encoding;
         }
 
+        public function get port():String
+        {
+            return _ncTypes[_nc.id].port;
+        }
+
         public function get protocol():String
         {
-            return _nc.uri.substring(0, _nc.uri.indexOf("://"));
+            return _ncTypes[_nc.id].protocol;
         }
 
         /**
@@ -328,10 +339,7 @@ package com.gearsandcogs.utils
          */
         public function get netConnectionsInfo():Vector.<Object>
         {
-            var myBA:ByteArray = new ByteArray();
-            myBA.writeObject( netConnections );
-            myBA.position = 0;
-            return( myBA.readObject() );
+            return parseObj(netConnections) as Vector.<Object>;
         }
 
         public function get was_connected():Boolean
