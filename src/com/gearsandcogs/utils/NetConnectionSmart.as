@@ -15,8 +15,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- VERSION: 1.7.0
- DATE: 08/11/2014
+ VERSION: 1.7.1
+ DATE: 08/13/2014
  ACTIONSCRIPT VERSION: 3.0
  DESCRIPTION:
  A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port and protocol.
@@ -119,7 +119,7 @@ package com.gearsandcogs.utils
         private static const RTMFP:String = "rtmfp";
         private static const RTMP:String = "rtmp";
         private static const RTMPT:String = "rtmpt";
-        public static const VERSION:String = "NetConnectionSmart v 1.7.0";
+        public static const VERSION:String = "NetConnectionSmart v 1.7.1";
 
         public var append_guid:Boolean;
         public var auto_reconnect:Boolean;
@@ -644,10 +644,10 @@ package com.gearsandcogs.utils
 
         private function checkNetStatus(e:Event):void
         {
-            var target_connection:PortConnection = e.target as PortConnection;
+            var targetConnection:PortConnection = e.target as PortConnection;
 
             if (debug)
-                log(target_connection.label + ": " + target_connection.status.info.code);
+                log(targetConnection.label + ": " + targetConnection.status.info.code);
 
             var status_count:uint = 0;
             var rejected_connection:PortConnection;
@@ -682,7 +682,7 @@ package com.gearsandcogs.utils
             }
 
             if (port_test)
-                dispatchEvent(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false, {code: NETCONNECTION_PORT_TEST_UPDATE}));
+                dispatchEvent(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false, {code: NETCONNECTION_PORT_TEST_UPDATE, internalTarget:targetConnection}));
 
             //if no success at all return the first rejected message or
             //return the status of the first connection in the array
