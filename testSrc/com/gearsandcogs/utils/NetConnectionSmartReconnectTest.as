@@ -3,9 +3,10 @@
  */
 package com.gearsandcogs.utils
 {
+    import flash.events.Event;
     import flash.events.NetStatusEvent;
+    import flash.utils.setTimeout;
 
-    import org.flexunit.asserts.assertEquals;
     import org.flexunit.asserts.assertFalse;
     import org.flexunit.asserts.assertTrue;
     import org.flexunit.async.Async;
@@ -36,57 +37,80 @@ package com.gearsandcogs.utils
         }
 
         [Test(async)]
+        public function testDisconnectReconnectFail():void
+        {
+            assertTrue(connected);
+
+            var test_complete:String = "test_complete";
+            var closed_fired:Boolean = false;
+            var failed_fired:Boolean = false;
+
+            addEventListener(NetStatusEvent.NET_STATUS, handleNetStatus);
+            function handleNetStatus(e:NetStatusEvent):void
+            {
+                switch (e.info.code)
+                {
+                    case NETCONNECTION_CONNECT_CLOSED:
+                        closed_fired = true;
+                        break;
+                    case NETCONNECTION_CONNECT_FAILED:
+                        failed_fired = true;
+                        break;
+                    case NETCONNECTION_RECONNECT_FAILED:
+                        assertTrue(closed_fired);
+                        assertTrue(failed_fired);
+                        dispatchEvent(new Event(test_complete));
+                        break;
+                }
+            }
+
+            // we can't close the connection based on a netconnection success event so we delay
+            setTimeout(function ():void
+            {
+                _connect_string_init = invalid_connect_server;
+                close(true);
+                assertFalse(connected);
+            }, 100);
+
+            Async.handleEvent(this, this, test_complete, null, 60000, this);
+        }
+
+        [Test(async)]
         public function testDisconnectReconnectSuccess():void
         {
             assertTrue(connected);
 
-            Async.handleEvent(this, this, NetStatusEvent.NET_STATUS, handleNetStatus, 1000, this);
-            function handleNetStatus(e:NetStatusEvent, test:NetConnectionSmartReconnectTest):void
+            var reconnect_success:String = "reconnect_success";
+            var closed_fired:Boolean = false;
+            var reconnect_fired:Boolean = false;
+
+            addEventListener(NetStatusEvent.NET_STATUS, handleNetStatus);
+            function handleNetStatus(e:NetStatusEvent):void
             {
-                assertEquals(e.info.code, NETCONNECTION_CONNECT_CLOSED);
+                switch (e.info.code)
+                {
+                    case NETCONNECTION_CONNECT_CLOSED:
+                        closed_fired = true;
+                        break;
+                    case NETCONNECTION_CONNECT_SUCCESS:
+                        assertTrue(closed_fired);
+                        assertTrue(reconnect_fired);
+                        dispatchEvent(new Event(reconnect_success));
+                        break;
+                    case NETCONNECTION_RECONNECT_INIT:
+                        reconnect_fired = true;
+                        break;
+                }
             }
 
-            close(true);
-            assertFalse(connected);
-
-            Async.handleEvent(this, this, NetStatusEvent.NET_STATUS, handleNetStatusReconnect, 60000, this);
-            function handleNetStatusReconnect(e:NetStatusEvent, test:NetConnectionSmartReconnectTest):void
+            // we can't close the connection based on a netconnection success event so we delay
+            setTimeout(function ():void
             {
-                assertEquals(e.info.code, NETCONNECTION_CONNECT_SUCCESS);
-            }
-        }
+                close(true);
+                assertFalse(connected);
+            }, 100);
 
-        [Test(async)]
-        public function testDisconnectReconnectFail():void
-        {
-            var ref:NetConnectionSmartReconnectTest = this;
-
-            assertTrue(connected);
-
-            Async.handleEvent(ref, ref, NetStatusEvent.NET_STATUS, handleNetStatusClose, 1000, ref);
-
-            _connect_string_init = invalid_connect_server;
-            close(true);
-            assertFalse(connected);
-
-            Async.handleEvent(ref, ref, NetStatusEvent.NET_STATUS, handleNetStatusReconnect, 60000, ref);
-
-            function handleNetStatusClose(e:NetStatusEvent, test:NetConnectionSmartReconnectTest):void
-            {
-                assertEquals(NETCONNECTION_CONNECT_CLOSED, e.info.code);
-            }
-            function handleNetStatusReconnect(e:NetStatusEvent, test:NetConnectionSmartReconnectTest):void
-            {
-                //expect a connection failed first
-                assertEquals(NETCONNECTION_CONNECT_FAILED, e.info.code);
-
-                //then make sure we get a connection reconnect failed second
-                Async.handleEvent(ref, ref, NetStatusEvent.NET_STATUS, handleNetStatusReconnectFail, 60000, ref);
-            }
-            function handleNetStatusReconnectFail(e:NetStatusEvent, test:NetConnectionSmartReconnectTest):void
-            {
-                assertEquals(NETCONNECTION_RECONNECT_FAILED, e.info.code);
-            }
+            Async.handleEvent(this, this, reconnect_success, null, 60000, this);
         }
     }
 }

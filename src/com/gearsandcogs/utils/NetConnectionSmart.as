@@ -15,8 +15,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- VERSION: 1.7.1
- DATE: 08/13/2014
+ VERSION: 1.7.2
+ DATE: 09/05/2014
  ACTIONSCRIPT VERSION: 3.0
  DESCRIPTION:
  A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port and protocol.
@@ -119,7 +119,7 @@ package com.gearsandcogs.utils
         private static const RTMFP:String = "rtmfp";
         private static const RTMP:String = "rtmp";
         private static const RTMPT:String = "rtmpt";
-        public static const VERSION:String = "NetConnectionSmart v 1.7.1";
+        public static const VERSION:String = "NetConnectionSmart v 1.7.2";
 
         public var append_guid:Boolean;
         public var auto_reconnect:Boolean;
@@ -192,14 +192,6 @@ package com.gearsandcogs.utils
             }
 
             return false;
-        }
-
-        private function parseObj(obj:*):Object
-        {
-            var myBA:ByteArray = new ByteArray();
-            myBA.writeObject(obj);
-            myBA.position = 0;
-            return( myBA.readObject() );
         }
 
         /**
@@ -587,6 +579,14 @@ package com.gearsandcogs.utils
             dispatchEvent(new MsgEvent(MSG_EVT, false, false, msg));
         }
 
+        private function parseObj(obj:*):Object
+        {
+            var myBA:ByteArray = new ByteArray();
+            myBA.writeObject(obj);
+            myBA.position = 0;
+            return( myBA.readObject() );
+        }
+
         private function processConnection(connection:PortConnection, protocol:String, port:String, parameters:Array):void
         {
             if (default_port_only && port != "default")
@@ -682,11 +682,11 @@ package com.gearsandcogs.utils
             }
 
             if (port_test)
-                dispatchEvent(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false, {code: NETCONNECTION_PORT_TEST_UPDATE, internalTarget:targetConnection}));
+                dispatchEvent(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false, {code: NETCONNECTION_PORT_TEST_UPDATE, internalTarget: targetConnection}));
 
             //if no success at all return the first rejected message or
             //return the status of the first connection in the array
-            if (status_count >= _ncTypes.length)
+            if (status_count == _ncTypes.length)
             {
                 _is_connecting = false;
 

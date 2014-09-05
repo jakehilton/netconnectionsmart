@@ -135,16 +135,9 @@ package com.gearsandcogs.utils
             {
                 if (debug)
                     log(label + " " + e.info.code);
-                status = e;
 
-                //hack alert..
-                //need to delay the status update slightly so we can run operations like close based off of this event
-                var statusDelayTimer:Timer = new Timer(0, 1);
-                statusDelayTimer.addEventListener(TimerEvent.TIMER_COMPLETE, function (e:TimerEvent):void
-                {
-                    dispatchEvent(new Event(STATUS_UPDATE));
-                });
-                statusDelayTimer.start();
+                status = e;
+                dispatchEvent(new Event(STATUS_UPDATE));
             }
         }
 
