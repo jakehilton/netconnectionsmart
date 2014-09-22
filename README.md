@@ -25,7 +25,7 @@ This can be used to identify which connection requests are coming from the same 
 * reconnect_max_time_wait: specify the max amount of time to pass between reconnect attempts. The reconnect logic employs an exponential back-off algorithm so it delays each successive attempt exponentially with a cap at the max set here plus a random seed. Default is 10.
 * sequential_connect: a boolean to enable or disable the sequential connect approach. By default it is disabled. This will try a connection one at a time and wait for a failure prior to trying the next type in the sequence. 
 * shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled. 
-* portArray: an array containing ports in the order they should be tried. By default is it [443,80,1935]
+* portArray: an array containing port numbers or NetConnectionTypes in the order they should be tried. By default is it [443,80,1935]. Added in 1.8.0 is the ability to pass in NetConnectionTypes so as to specify an exact protocol/port/proxy connect order.
 * port_test: a boolean specifying whether to only run a port test for all available protocols over the specified ports in the portArray. It will fire events for updates and when it completes.
 
 It has an event,MSG_EVT, that fires to notify the user of an event in the class.
@@ -73,3 +73,22 @@ ncs.addEventListener(NetStatusEvent.NET_STATUS,function(e:NetStatusEvent):void
 ncs.connect("rtmp://myserver.com/application");
 
 ```
+
+ Port array examples
+
+ ```ActionScript
+ ncs.portArray = [443,80,1935];
+
+ //Alternate usage showing a mix of numbers with NetConnectionTypes. The order will be honored in the connection attempts
+ ncs.portArray = [
+     new NetConnectionType(NetConnectionSmart.RTMP, "1935", "", NetConnectionSmart.PROXYTYPE_NONE),
+     new NetConnectionType(NetConnectionSmart.RTMP, "443", "s", NetConnectionSmart.PROXYTYPE_BEST),
+     new NetConnectionType(NetConnectionSmart.RTMFP, "443"),
+     443,
+     new NetConnectionType(NetConnectionSmart.RTMPT, "80", "", NetConnectionSmart.PROXYTYPE_HTTP),
+     new NetConnectionType(NetConnectionSmart.RTMP, "80", "e", NetConnectionSmart.PROXYTYPE_CONNECT),
+     new NetConnectionType(NetConnectionSmart.RTMP, "80", "", NetConnectionSmart.PROXYTYPE_CONNECTONLY),
+     80,
+     1935
+ ];
+ ```

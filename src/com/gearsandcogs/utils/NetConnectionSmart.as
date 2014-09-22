@@ -15,8 +15,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- VERSION: 1.7.3
- DATE: 09/16/2014
+ VERSION: 1.8.0
+ DATE: 09/22/2014
  ACTIONSCRIPT VERSION: 3.0
  DESCRIPTION:
  A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port and protocol.
@@ -43,7 +43,7 @@
  reconnect_max_time_wait: specify the max amount of time to pass between reconnect attempts. The reconnect logic employs an exponential back-off algorithm so it delays each successive attempt expnentially with a cap at the max set here plus a random seed. Default is 10.
  sequential_connect: a boolean to enable or disable the sequential connect approach. By default it is disabled. This will try a connection one at a time and wait for a failure prior to trying the next type in the sequence.
  shotgun_connect: a boolean to enable or disable the shotgun approach. By default it is enabled.
- portArray: an array containing ports in the order they should be tried. By default is it [443,80,1935]
+ portArray: an array containing port numbers or NetConnectionTypes in the order they should be tried. By default is it [443,80,1935]. Added in 1.8.0 is the ability to pass in NetConnectionTypes so as to specify an exact protocol/port/proxy connect order.
  port_test: a boolean specifying whether to only run a port test for all available protocols over the specified ports in the portArray. It will fire events for updates and when it completes.
 
  It has an event,MSG_EVT, that fires to notify the user of an event in the class.
@@ -87,6 +87,22 @@
 
  ncs.connect("rtmp://myserver.com/application");
 
+ //Port array examples
+ ncs.portArray = [443,80,1935];
+
+ Alternate usage
+ ncs.portArray = [
+     new NetConnectionType(NetConnectionSmart.RTMP, "1935", "", NetConnectionSmart.PROXYTYPE_NONE),
+     new NetConnectionType(NetConnectionSmart.RTMP, "443", "s", NetConnectionSmart.PROXYTYPE_BEST),
+     new NetConnectionType(NetConnectionSmart.RTMP, "443"),
+     new NetConnectionType(NetConnectionSmart.RTMP, "80", "", NetConnectionSmart.PROXYTYPE_HTTP),
+     new NetConnectionType(NetConnectionSmart.RTMP, "80", "e", NetConnectionSmart.PROXYTYPE_CONNECT),
+     new NetConnectionType(NetConnectionSmart.RTMP, "80", "", NetConnectionSmart.PROXYTYPE_CONNECTONLY),
+     443,
+     80,
+     1935
+ ];
+
  */
 
 package com.gearsandcogs.utils
@@ -116,10 +132,15 @@ package com.gearsandcogs.utils
         public static const NETCONNECTION_PORT_TEST_UPDATE:String = "NetConnection.PortTest.Update";
         public static const NETCONNECTION_RECONNECT_FAILED:String = "NetConnection.Reconnect.Failed";
         public static const NETCONNECTION_RECONNECT_INIT:String = "NetConnection.Reconnect.Init";
-        private static const RTMFP:String = "rtmfp";
-        private static const RTMP:String = "rtmp";
-        private static const RTMPT:String = "rtmpt";
-        public static const VERSION:String = "NetConnectionSmart v 1.7.3";
+        public static const PROXYTYPE_BEST:String = "best";
+        public static const PROXYTYPE_CONNECT:String = "CONNECT";
+        public static const PROXYTYPE_CONNECTONLY:String = "CONNECTOnly";
+        public static const PROXYTYPE_HTTP:String = "HTTP";
+        public static const PROXYTYPE_NONE:String = "none";
+        public static const RTMFP:String = "rtmfp";
+        public static const RTMP:String = "rtmp";
+        public static const RTMPT:String = "rtmpt";
+        public static const VERSION:String = "NetConnectionSmart v 1.8.0";
 
         public var append_guid:Boolean;
         public var auto_reconnect:Boolean;
@@ -457,25 +478,33 @@ package com.gearsandcogs.utils
             if (skip_tunneling && force_tunneling)
                 throw(new Error("Cannot force tunneling and skip tunneling. Please choose one or the other."));
 
+            var assignmentOverrideArray:Array = [];
             var rtmfpArray:Array = [];
             var rtmpArray:Array = [];
             var rtmpConnectArray:Array = [];
             var rtmptArray:Array = [];
 
-            for each(var r:String in _portArray)
+            for each(var r:Object in _portArray)
             {
+                if(r is NetConnectionType)
+                {
+                    assignmentOverrideArray.push(r);
+                    continue;
+                }
+
+                var port:String = r.toString();
                 if (!force_tunneling)
                 {
-                    if (proxyType == "none")
-                        rtmpConnectArray.push(new NetConnectionType(RTMP, r, encrypted ? "e" : secure ? "s" : "", "CONNECTonly"));
-                    rtmpArray.push(new NetConnectionType(RTMP, r, encrypted ? "e" : secure ? "s" : "", proxyType));
+                    if (proxyType == PROXYTYPE_NONE)
+                        rtmpConnectArray.push(new NetConnectionType(RTMP, port, encrypted ? "e" : secure ? "s" : "", PROXYTYPE_CONNECTONLY));
+                    rtmpArray.push(new NetConnectionType(RTMP, port, encrypted ? "e" : secure ? "s" : "", proxyType));
                 }
                 if (enable_rtmfp)
-                    rtmfpArray.push(new NetConnectionType(RTMFP, r));
+                    rtmfpArray.push(new NetConnectionType(RTMFP, port));
                 if (!skip_tunneling && !secure)
-                    rtmptArray.push(new NetConnectionType(RTMPT, r, encrypted ? "e" : "", proxyType == "none" ? "best" : proxyType));
+                    rtmptArray.push(new NetConnectionType(RTMPT, port, encrypted ? "e" : "", proxyType == PROXYTYPE_NONE ? PROXYTYPE_BEST : proxyType));
             }
-            _ncTypes = Vector.<NetConnectionType>([].concat(rtmfpArray, rtmpArray, rtmpConnectArray, rtmptArray));
+            _ncTypes = Vector.<NetConnectionType>([].concat(assignmentOverrideArray, rtmfpArray, rtmpArray, rtmpConnectArray, rtmptArray));
         }
 
         protected function initPortConnection(nc_num:uint):NetConnectionType

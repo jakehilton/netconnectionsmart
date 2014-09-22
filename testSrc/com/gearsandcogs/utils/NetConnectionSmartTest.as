@@ -3,7 +3,11 @@
  */
 package com.gearsandcogs.utils
 {
+    import com.gearsandcogs.utils.NetConnectionSmart;
+
     import flash.events.NetStatusEvent;
+
+    import org.flexunit.assertThat;
 
     import org.flexunit.asserts.assertEquals;
     import org.flexunit.asserts.assertNotNull;
@@ -117,6 +121,26 @@ package com.gearsandcogs.utils
         public function testPortArray():void
         {
             assertNotNull(portArray);
+        }
+
+        [Test]
+        public function testComplexPortArray():void
+        {
+            portArray = [
+                new NetConnectionType(NetConnectionSmart.RTMP, "1935", "", NetConnectionSmart.PROXYTYPE_NONE),
+                new NetConnectionType(NetConnectionSmart.RTMP, "443", "s", NetConnectionSmart.PROXYTYPE_BEST),
+                new NetConnectionType(NetConnectionSmart.RTMFP, "443"),
+                new NetConnectionType(NetConnectionSmart.RTMPT, "80", "", NetConnectionSmart.PROXYTYPE_HTTP),
+                new NetConnectionType(NetConnectionSmart.RTMP, "80", "e", NetConnectionSmart.PROXYTYPE_CONNECT),
+                new NetConnectionType(NetConnectionSmart.RTMP, "80", "", NetConnectionSmart.PROXYTYPE_CONNECTONLY),
+                443,
+                80,
+                1935
+            ];
+            assertNotNull(netConnections);
+            assertTrue(portArray[2] is NetConnectionType);
+            assertTrue(portArray[2].protocol == NetConnectionSmart.RTMFP);
+            assertThat(netConnections.length > 0);
         }
 
         [Test]
