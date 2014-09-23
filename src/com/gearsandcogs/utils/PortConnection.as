@@ -67,6 +67,11 @@ package com.gearsandcogs.utils
             _was_connected = b;
         }
 
+        private static function log(msg:String):void
+        {
+            trace("PortConnection: " + msg);
+        }
+
         override public function connect(command:String, ...parameters):void
         {
             //start a timer here so we can watch this so if it doesn't connect in time we can kill it
@@ -110,11 +115,6 @@ package com.gearsandcogs.utils
         public function onBWDone():void
         {
             //don't do anything
-        }
-
-        private function log(msg:String):void
-        {
-            trace("PortConnection: " + msg);
         }
 
         private function handleNetStatus(e:NetStatusEvent):void

@@ -28,8 +28,8 @@ package com.gearsandcogs.utils
 
         private static function binb2hex(binarray:Array):String
         {
-            var str:String = new String("");
-            var tab:String = new String("0123456789abcdef");
+            var str:String = "";
+            var tab:String = "0123456789abcdef";
             for (var i:Number = 0; i < binarray.length * 4; i++)
             {
                 str += tab.charAt((binarray[i >> 2] >> ((3 - i % 4) * 8 + 4)) & 0xF) + tab.charAt((binarray[i >> 2] >> ((3 - i % 4) * 8)) & 0xF);
@@ -70,7 +70,7 @@ package com.gearsandcogs.utils
                 d = safe_add(d, oldd);
                 e = safe_add(e, olde);
             }
-            return new Array(a, b, c, d, e);
+            return [a, b, c, d, e];
         }
 
         private static function hex_sha1(src:String):String
@@ -105,7 +105,7 @@ package com.gearsandcogs.utils
 
         private static function str2binb(str:String):Array
         {
-            var bin:Array = new Array();
+            var bin:Array = [];
             var mask:Number = (1 << 8) - 1;
             for (var i:Number = 0; i < str.length * 8; i += 8)
             {

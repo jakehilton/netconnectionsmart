@@ -365,6 +365,14 @@ package com.gearsandcogs.utils
             return _was_connected;
         }
 
+        private static function parseObj(obj:*):Object
+        {
+            var myBA:ByteArray = new ByteArray();
+            myBA.writeObject(obj);
+            myBA.position = 0;
+            return( myBA.readObject() );
+        }
+
         /**
          * @see flash.net.NetConnection.call
          */
@@ -486,7 +494,7 @@ package com.gearsandcogs.utils
 
             for each(var r:Object in _portArray)
             {
-                if(r is NetConnectionType)
+                if (r is NetConnectionType)
                 {
                     assignmentOverrideArray.push(r);
                     continue;
@@ -610,14 +618,6 @@ package com.gearsandcogs.utils
             if (debug)
                 trace("NetConnectionSmart: " + msg);
             dispatchEvent(new MsgEvent(MSG_EVT, false, false, msg));
-        }
-
-        private function parseObj(obj:*):Object
-        {
-            var myBA:ByteArray = new ByteArray();
-            myBA.writeObject(obj);
-            myBA.position = 0;
-            return( myBA.readObject() );
         }
 
         private function processConnection(connection:PortConnection, protocol:String, port:String, parameters:Array):void

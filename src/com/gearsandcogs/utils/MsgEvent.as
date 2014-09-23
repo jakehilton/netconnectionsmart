@@ -6,9 +6,9 @@ package com.gearsandcogs.utils
     {
         public var msg:String;
 
-        public function MsgEvent(type:String, bubbles:Boolean = false, cancelable:Boolean = false, msg:String = "")
+        public function MsgEvent(typeIn:String, bubbles:Boolean = false, cancelable:Boolean = false, msg:String = "")
         {
-            super(type, bubbles, cancelable);
+            super(typeIn, bubbles, cancelable);
             this.msg = msg;
         }
     }
