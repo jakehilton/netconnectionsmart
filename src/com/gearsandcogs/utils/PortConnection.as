@@ -83,7 +83,8 @@ package com.gearsandcogs.utils
                     if (debug)
                         log("connection timeout");
 
-                    handleNetStatus(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false, {code: "NetConnection.Connect.Failed"}));
+                    handleNetStatus(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false,
+                        {code: NetConnectionSmart.NETCONNECTION_CONNECT_FAILED}));
                     deactivateHandlers();
                 });
             }
