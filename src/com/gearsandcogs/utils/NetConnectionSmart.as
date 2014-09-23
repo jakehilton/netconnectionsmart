@@ -15,8 +15,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- VERSION: 1.8.0
- DATE: 09/22/2014
+ VERSION: 1.8.1
+ DATE: 09/23/2014
  ACTIONSCRIPT VERSION: 3.0
  DESCRIPTION:
  A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port and protocol.
@@ -140,7 +140,7 @@ package com.gearsandcogs.utils
         public static const RTMFP:String = "rtmfp";
         public static const RTMP:String = "rtmp";
         public static const RTMPT:String = "rtmpt";
-        public static const VERSION:String = "NetConnectionSmart v 1.8.0";
+        public static const VERSION:String = "NetConnectionSmart v 1.8.1";
 
         public var append_guid:Boolean;
         public var auto_reconnect:Boolean;
@@ -552,7 +552,6 @@ package com.gearsandcogs.utils
                 log("Closing down NetConnection: " + pc.label);
 
             pc.removeEventListener(PortConnection.STATUS_UPDATE, checkNetStatus);
-            pc.addEventListener(NetStatusEvent.NET_STATUS, nullHandleNetStatus);
             pc.close();
 
             //cleanup listener
@@ -752,12 +751,6 @@ package com.gearsandcogs.utils
             if (debug)
                 log(e.text);
             dispatchEvent(e);
-        }
-
-        private function nullHandleNetStatus(e:NetStatusEvent):void
-        {
-            if (debug)
-                log("null handler: " + e.info.code + " " + (e.target as PortConnection).label);
         }
 
         private function handleSecurityError(e:SecurityErrorEvent):void

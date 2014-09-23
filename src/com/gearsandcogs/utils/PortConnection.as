@@ -47,10 +47,11 @@ package com.gearsandcogs.utils
         {
             try
             {
-                return status.info.code == "NetConnection.Connect.Rejected";
+                return status.info.code == NetConnectionSmart.NETCONNECTION_CONNECT_REJECTED;
             }
             catch (e:Error)
             {
+                //no status info object exists
             }
 
             return false;
@@ -131,7 +132,7 @@ package com.gearsandcogs.utils
             }
 
             //if rejected connection came in we want to preserve that message
-            if (!status || (status && status.info.code != "NetConnection.Connect.Rejected"))
+            if (!status || (status && status.info.code != NetConnectionSmart.NETCONNECTION_CONNECT_REJECTED))
             {
                 if (debug)
                     log(label + " " + e.info.code);
