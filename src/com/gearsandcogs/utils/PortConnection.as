@@ -72,7 +72,7 @@ package com.gearsandcogs.utils
             trace("PortConnection: " + msg);
         }
 
-        override public function connect(command:String, ...parameters):void
+        override public function connect(command:String, ...rest):void
         {
             //start a timer here so we can watch this so if it doesn't connect in time we can kill it
             if (!_timeoutTimer)
@@ -90,7 +90,7 @@ package com.gearsandcogs.utils
             }
             _timeoutTimer.start();
             _connect_init_time = new Date().time;
-            super.connect.apply(null, [command].concat(parameters));
+            super.connect.apply(null, [command].concat(rest));
         }
 
         public function addHandlers():void
@@ -108,11 +108,13 @@ package com.gearsandcogs.utils
             _internal_event_handlers_deactivated = true;
         }
 
+        //noinspection JSUnusedGlobalSymbols
         public function getProtocol():String
         {
             return uri.substring(0, uri.indexOf("://"));
         }
 
+        //noinspection JSUnusedGlobalSymbols
         public function onBWDone():void
         {
             //don't do anything

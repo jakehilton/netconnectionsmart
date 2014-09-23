@@ -125,6 +125,7 @@ package com.gearsandcogs.utils
         public static const MSG_EVT:String = "NetConnectionSmartMsgEvent";
         public static const NETCONNECTION_CONNECT_CLOSED:String = "NetConnection.Connect.Closed";
         public static const NETCONNECTION_CONNECT_FAILED:String = "NetConnection.Connect.Failed";
+        //noinspection JSUnusedGlobalSymbols
         public static const NETCONNECTION_CONNECT_NETWORKCHANGE:String = "NetConnection.Connect.NetworkChange";
         public static const NETCONNECTION_CONNECT_REJECTED:String = "NetConnection.Connect.Rejected";
         public static const NETCONNECTION_CONNECT_SUCCESS:String = "NetConnection.Connect.Success";
@@ -231,6 +232,7 @@ package com.gearsandcogs.utils
             return _nc;
         }
 
+        //noinspection JSUnusedGlobalSymbols
         /**
          * @return A raw object with information about the current active netconnection
          */
@@ -239,11 +241,13 @@ package com.gearsandcogs.utils
             return parseObj(connection);
         }
 
+        //noinspection JSUnusedGlobalSymbols
         public function get connectParams():Array
         {
             return _connectParamsInit;
         }
 
+        //noinspection JSUnusedGlobalSymbols
         public function set connectParams(paramArray:Array):void
         {
             _connectParamsInit = paramArray;
@@ -254,6 +258,7 @@ package com.gearsandcogs.utils
             return _guid;
         }
 
+        //noinspection JSUnusedGlobalSymbols
         /**
          * @see flash.net.NetConnection.objectEncoding
          */
@@ -262,6 +267,7 @@ package com.gearsandcogs.utils
             return _nc ? _nc.objectEncoding : _object_encoding;
         }
 
+        //noinspection JSUnusedGlobalSymbols
         public function set objectEncoding(encoding:uint):void
         {
             _object_encoding = encoding;
@@ -287,6 +293,7 @@ package com.gearsandcogs.utils
             return _nc ? _nc.proxyType : _proxy_type;
         }
 
+        //noinspection JSUnusedGlobalSymbols
         /**
          * @see flash.net.NetConnection.connectedProxyType
          */
@@ -295,6 +302,7 @@ package com.gearsandcogs.utils
             _proxy_type = proxy_type;
         }
 
+        //noinspection JSUnusedGlobalSymbols
         public function get response_time():Number
         {
             return _nc.response_time || -1;
@@ -308,6 +316,7 @@ package com.gearsandcogs.utils
             return _nc.connectedProxyType;
         }
 
+        //noinspection JSUnusedGlobalSymbols
         /**
          * @see flash.net.NetConnection.uri
          */
@@ -316,6 +325,7 @@ package com.gearsandcogs.utils
             return _nc.uri;
         }
 
+        //noinspection JSUnusedGlobalSymbols
         /**
          * @see flash.net.NetConnection.usingTLS
          */
@@ -461,7 +471,7 @@ package com.gearsandcogs.utils
             initConnectionTypes();
 
             _connectParamsInit = parameters;
-            _connectParams = append_guid ? parameters.concat(_guid) : parameters;
+            _connectParams = append_guid ? parameters.concat(guid) : parameters;
             _server_string = _connect_string_init.substring(0, _connect_string_init.indexOf("/"));
             _app_string = _connect_string_init.substring(_connect_string_init.indexOf("/"));
             _initial_connect_run = true;
@@ -641,7 +651,7 @@ package com.gearsandcogs.utils
 
             dispatchEvent(e);
 
-            if (!auto_reconnect || !_was_connected || (e.info.code != NETCONNECTION_CONNECT_CLOSED && e.info.code != NETCONNECTION_CONNECT_FAILED))
+            if (!auto_reconnect || !was_connected || (e.info.code != NETCONNECTION_CONNECT_CLOSED && e.info.code != NETCONNECTION_CONNECT_FAILED))
                 return;
 
             if (reconnect_count_limit == 0 || (_reconnect_count < reconnect_count_limit))
