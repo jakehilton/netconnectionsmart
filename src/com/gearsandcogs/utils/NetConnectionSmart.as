@@ -15,8 +15,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- VERSION: 1.8.1
- DATE: 09/23/2014
+ VERSION: 1.8.2
+ DATE: 09/26/2014
  ACTIONSCRIPT VERSION: 3.0
  DESCRIPTION:
  A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port and protocol.
@@ -92,15 +92,15 @@
 
  Alternate usage
  ncs.portArray = [
-     new NetConnectionType(NetConnectionSmart.RTMP, "1935", "", NetConnectionSmart.PROXYTYPE_NONE),
-     new NetConnectionType(NetConnectionSmart.RTMP, "443", "s", NetConnectionSmart.PROXYTYPE_BEST),
-     new NetConnectionType(NetConnectionSmart.RTMP, "443"),
-     new NetConnectionType(NetConnectionSmart.RTMP, "80", "", NetConnectionSmart.PROXYTYPE_HTTP),
-     new NetConnectionType(NetConnectionSmart.RTMP, "80", "e", NetConnectionSmart.PROXYTYPE_CONNECT),
-     new NetConnectionType(NetConnectionSmart.RTMP, "80", "", NetConnectionSmart.PROXYTYPE_CONNECTONLY),
-     443,
-     80,
-     1935
+ new NetConnectionType(NetConnectionSmart.RTMP, "1935", "", NetConnectionSmart.PROXYTYPE_NONE),
+ new NetConnectionType(NetConnectionSmart.RTMP, "443", "s", NetConnectionSmart.PROXYTYPE_BEST),
+ new NetConnectionType(NetConnectionSmart.RTMP, "443"),
+ new NetConnectionType(NetConnectionSmart.RTMP, "80", "", NetConnectionSmart.PROXYTYPE_HTTP),
+ new NetConnectionType(NetConnectionSmart.RTMP, "80", "e", NetConnectionSmart.PROXYTYPE_CONNECT),
+ new NetConnectionType(NetConnectionSmart.RTMP, "80", "", NetConnectionSmart.PROXYTYPE_CONNECTONLY),
+ 443,
+ 80,
+ 1935
  ];
 
  */
@@ -141,7 +141,7 @@ package com.gearsandcogs.utils
         public static const RTMFP:String = "rtmfp";
         public static const RTMP:String = "rtmp";
         public static const RTMPT:String = "rtmpt";
-        public static const VERSION:String = "NetConnectionSmart v 1.8.1";
+        public static const VERSION:String = "NetConnectionSmart v 1.8.2";
 
         public var append_guid:Boolean;
         public var auto_reconnect:Boolean;
@@ -171,6 +171,8 @@ package com.gearsandcogs.utils
         private var _initial_connect_run:Boolean;
         private var _is_connecting:Boolean;
         private var _was_connected:Boolean;
+        private var _connect_init_time:Number;
+        private var _response_time:Number;
         private var _ncClient:Object;
         private var _nc:PortConnection;
         private var _app_string:String;
@@ -227,7 +229,7 @@ package com.gearsandcogs.utils
         /**
          * @return Resolved active netconnection
          */
-        public function get connection():NetConnection
+        public function get connection():PortConnection
         {
             return _nc;
         }
@@ -305,7 +307,7 @@ package com.gearsandcogs.utils
         //noinspection JSUnusedGlobalSymbols
         public function get response_time():Number
         {
-            return _nc.response_time || -1;
+            return _response_time || -1;
         }
 
         /**
@@ -448,6 +450,7 @@ package com.gearsandcogs.utils
             if (connecting || connected)
                 return;
 
+            _connect_init_time = new Date().time;
             _is_connecting = true;
 
             //strip rtmp variants
@@ -589,6 +592,17 @@ package com.gearsandcogs.utils
             }
         }
 
+        private function connectionSuccess(conn:PortConnection):void
+        {
+            _is_connecting = false;
+            _was_connected = true;
+            _reconnect_count = 0;
+            _connection_attempt_count = 0;
+            _response_time = new Date().time - _connect_init_time;
+            acceptNc(conn);
+            handleNetStatus(conn.status);
+        }
+
         private function initConnection(connect_count:uint = 0):void
         {
             //all connection attempts have been tried
@@ -712,12 +726,7 @@ package com.gearsandcogs.utils
                 }
                 else if (!connected && curr_connection.connected)
                 {
-                    _is_connecting = false;
-                    _was_connected = true;
-                    _reconnect_count = 0;
-                    _connection_attempt_count = 0;
-                    acceptNc(curr_connection);
-                    handleNetStatus(curr_connection.status);
+                    connectionSuccess(curr_connection);
                     return;
                 }
                 else if (!rejected_connection && curr_connection.rejected)
