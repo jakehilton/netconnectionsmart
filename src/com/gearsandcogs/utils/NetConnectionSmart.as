@@ -15,7 +15,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- VERSION: 1.8.2
+ VERSION: 1.9.0
  DATE: 09/26/2014
  ACTIONSCRIPT VERSION: 3.0
  DESCRIPTION:
@@ -46,7 +46,7 @@
  portArray: an array containing port numbers or NetConnectionTypes in the order they should be tried. By default is it [443,80,1935]. Added in 1.8.0 is the ability to pass in NetConnectionTypes so as to specify an exact protocol/port/proxy connect order.
  port_test: a boolean specifying whether to only run a port test for all available protocols over the specified ports in the portArray. It will fire events for updates and when it completes.
 
- It has an event,MSG_EVT, that fires to notify the user of an event in the class.
+ It has an event,PARAM_EVT, that fires to notify the user of an event in the class. It has a param value which is an object which should be case to a string to read.
 
  If you are experiencing issues with proxies you can try setting the proxyType="best" as this will attempt to use a different connect method if normal attempts fail.
 
@@ -114,7 +114,6 @@ package com.gearsandcogs.utils
     import flash.events.NetStatusEvent;
     import flash.events.SecurityErrorEvent;
     import flash.events.TimerEvent;
-    import flash.net.NetConnection;
     import flash.net.ObjectEncoding;
     import flash.net.Responder;
     import flash.utils.ByteArray;
@@ -122,7 +121,7 @@ package com.gearsandcogs.utils
 
     public class NetConnectionSmart extends EventDispatcher
     {
-        public static const MSG_EVT:String = "NetConnectionSmartMsgEvent";
+        public static const PARAM_EVT:String = "NetConnectionSmartMsgEvent";
         public static const NETCONNECTION_CONNECT_CLOSED:String = "NetConnection.Connect.Closed";
         public static const NETCONNECTION_CONNECT_FAILED:String = "NetConnection.Connect.Failed";
         //noinspection JSUnusedGlobalSymbols
@@ -141,9 +140,17 @@ package com.gearsandcogs.utils
         public static const RTMFP:String = "rtmfp";
         public static const RTMP:String = "rtmp";
         public static const RTMPT:String = "rtmpt";
-        public static const VERSION:String = "NetConnectionSmart v 1.8.2";
+        public static const VERSION:String = "NetConnectionSmart v 1.9.0";
 
+        /**
+         * Boolean to determine if a unique alphanumeric string should be passed at the end of the param set to the media server
+         * @default false
+         */
         public var append_guid:Boolean;
+        /**
+         * Boolean to define whether the class with attempt to automatically reconnect to a server when the connection is closed by a means outside of the close call
+         * @default false
+         */
         public var auto_reconnect:Boolean;
         public var default_port_only:Boolean;
         public var debug:Boolean;
@@ -641,7 +648,7 @@ package com.gearsandcogs.utils
         {
             if (debug)
                 trace("NetConnectionSmart: " + msg);
-            dispatchEvent(new MsgEvent(MSG_EVT, false, false, msg));
+            dispatchEvent(new ParamEvent(PARAM_EVT, false, false, msg));
         }
 
         private function processConnection(connection:PortConnection, protocol:String, port:String, parameters:Array):void
