@@ -28,7 +28,7 @@ This can be used to identify which connection requests are coming from the same 
 * portArray: an array containing port numbers or NetConnectionTypes in the order they should be tried. By default is it [443,80,1935]. Added in 1.8.0 is the ability to pass in NetConnectionTypes so as to specify an exact protocol/port/proxy connect order.
 * port_test: a boolean specifying whether to only run a port test for all available protocols over the specified ports in the portArray. It will fire events for updates and when it completes.
 
-It has an event,MSG_EVT, that fires to notify the user of an event in the class.
+It has an event,PARAM_EVT, that fires to notify the user of an event in the class. It has a param value which is an object which should be case to a string to read.
 
 If you are experiencing issues with proxies you can try setting the proxyType="best" as this will attempt to use a different connect method if normal attempts fail.
 

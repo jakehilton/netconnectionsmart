@@ -121,17 +121,17 @@ package com.gearsandcogs.utils
 
     public class NetConnectionSmart extends EventDispatcher
     {
-        public static const PARAM_EVT:String = "NetConnectionSmartMsgEvent";
         public static const NETCONNECTION_CONNECT_CLOSED:String = "NetConnection.Connect.Closed";
         public static const NETCONNECTION_CONNECT_FAILED:String = "NetConnection.Connect.Failed";
-        //noinspection JSUnusedGlobalSymbols
         public static const NETCONNECTION_CONNECT_NETWORKCHANGE:String = "NetConnection.Connect.NetworkChange";
+        //noinspection JSUnusedGlobalSymbols
         public static const NETCONNECTION_CONNECT_REJECTED:String = "NetConnection.Connect.Rejected";
         public static const NETCONNECTION_CONNECT_SUCCESS:String = "NetConnection.Connect.Success";
         public static const NETCONNECTION_PORT_TEST_COMPLETE:String = "NetConnection.PortTest.Complete";
         public static const NETCONNECTION_PORT_TEST_UPDATE:String = "NetConnection.PortTest.Update";
         public static const NETCONNECTION_RECONNECT_FAILED:String = "NetConnection.Reconnect.Failed";
         public static const NETCONNECTION_RECONNECT_INIT:String = "NetConnection.Reconnect.Init";
+        public static const PARAM_EVT:String = "NetConnectionSmartMsgEvent";
         public static const PROXYTYPE_BEST:String = "best";
         public static const PROXYTYPE_CONNECT:String = "CONNECT";
         public static const PROXYTYPE_CONNECTONLY:String = "CONNECTOnly";
@@ -195,8 +195,7 @@ package com.gearsandcogs.utils
         /**
          * A replacement class for the build-in NetConnection class.
          */
-        public function NetConnectionSmart()
-        {
+        public function NetConnectionSmart() {
             _ncClient = {};
             _guid = GUID.create();
         }
@@ -204,22 +203,18 @@ package com.gearsandcogs.utils
         /**
          * @inheritDoc
          */
-        public function set client(obj:Object):void
-        {
+        public function set client(obj:Object):void {
             _ncClient = obj;
         }
 
         /**
          * @return A boolean whether the active netconnection is connected
          */
-        public function get connected():Boolean
-        {
-            try
-            {
+        public function get connected():Boolean {
+            try {
                 return _nc.connected;
             }
-            catch (e:Error)
-            {
+            catch(e:Error) {
             }
 
             return false;
@@ -228,16 +223,14 @@ package com.gearsandcogs.utils
         /**
          * @return A boolean whether the active netconnection is connecting
          */
-        public function get connecting():Boolean
-        {
+        public function get connecting():Boolean {
             return _is_connecting;
         }
 
         /**
          * @return Resolved active netconnection
          */
-        public function get connection():PortConnection
-        {
+        public function get connection():PortConnection {
             return _nc;
         }
 
@@ -245,25 +238,21 @@ package com.gearsandcogs.utils
         /**
          * @return A raw object with information about the current active netconnection
          */
-        public function get connectionInfo():Object
-        {
+        public function get connectionInfo():Object {
             return parseObj(connection);
         }
 
         //noinspection JSUnusedGlobalSymbols
-        public function get connectParams():Array
-        {
+        public function get connectParams():Array {
             return _connectParamsInit;
         }
 
         //noinspection JSUnusedGlobalSymbols
-        public function set connectParams(paramArray:Array):void
-        {
+        public function set connectParams(paramArray:Array):void {
             _connectParamsInit = paramArray;
         }
 
-        public function get guid():String
-        {
+        public function get guid():String {
             return _guid;
         }
 
@@ -271,34 +260,29 @@ package com.gearsandcogs.utils
         /**
          * @see flash.net.NetConnection.objectEncoding
          */
-        public function get objectEncoding():uint
-        {
+        public function get objectEncoding():uint {
             return _nc ? _nc.objectEncoding : _object_encoding;
         }
 
         //noinspection JSUnusedGlobalSymbols
-        public function set objectEncoding(encoding:uint):void
-        {
+        public function set objectEncoding(encoding:uint):void {
             _object_encoding = encoding;
-            if (_nc)
+            if(_nc)
                 _nc.objectEncoding = encoding;
         }
 
-        public function get port():String
-        {
+        public function get port():String {
             return _ncTypes[_nc.id].port;
         }
 
-        public function get protocol():String
-        {
+        public function get protocol():String {
             return _ncTypes[_nc.id].protocol;
         }
 
         /**
          * @see flash.net.NetConnection.proxyType
          */
-        public function get proxyType():String
-        {
+        public function get proxyType():String {
             return _nc ? _nc.proxyType : _proxy_type;
         }
 
@@ -306,22 +290,19 @@ package com.gearsandcogs.utils
         /**
          * @see flash.net.NetConnection.connectedProxyType
          */
-        public function set proxyType(proxy_type:String):void
-        {
+        public function set proxyType(proxy_type:String):void {
             _proxy_type = proxy_type;
         }
 
         //noinspection JSUnusedGlobalSymbols
-        public function get response_time():Number
-        {
+        public function get response_time():Number {
             return _response_time || -1;
         }
 
         /**
          * @see flash.net.NetConnection.connectedProxyType
          */
-        public function get connectedProxyType():String
-        {
+        public function get connectedProxyType():String {
             return _nc.connectedProxyType;
         }
 
@@ -329,8 +310,7 @@ package com.gearsandcogs.utils
         /**
          * @see flash.net.NetConnection.uri
          */
-        public function get uri():String
-        {
+        public function get uri():String {
             return _nc.uri;
         }
 
@@ -338,16 +318,14 @@ package com.gearsandcogs.utils
         /**
          * @see flash.net.NetConnection.usingTLS
          */
-        public function get usingTLS():Boolean
-        {
+        public function get usingTLS():Boolean {
             return _nc.usingTLS;
         }
 
         /**
          * array of uints which specify which ports to use during the connection sequence
          */
-        public function get portArray():Array
-        {
+        public function get portArray():Array {
             return _portArray;
         }
 
@@ -355,8 +333,7 @@ package com.gearsandcogs.utils
          * Used to update/instantiate which ports will be used during the connection sequence.
          * @param portArray
          */
-        public function set portArray(portArray:Array):void
-        {
+        public function set portArray(portArray:Array):void {
             _portArray = portArray;
             initConnectionTypes();
         }
@@ -365,8 +342,7 @@ package com.gearsandcogs.utils
          * @return Vector of NetConnectionTypes
          * @see com.gearsandcogs.utils.NetConnectionType
          */
-        public function get netConnections():Vector.<NetConnectionType>
-        {
+        public function get netConnections():Vector.<NetConnectionType> {
             return _ncTypes;
         }
 
@@ -374,30 +350,26 @@ package com.gearsandcogs.utils
          *
          * @return Raw Object with parsed netconnection information for each NetConnectionType
          */
-        public function get netConnectionsInfo():Vector.<Object>
-        {
+        public function get netConnectionsInfo():Vector.<Object> {
             return parseObj(netConnections) as Vector.<Object>;
         }
 
-        public function get was_connected():Boolean
-        {
+        public function get was_connected():Boolean {
             return _was_connected;
         }
 
-        private static function parseObj(obj:*):Object
-        {
+        private static function parseObj(obj:*):Object {
             var myBA:ByteArray = new ByteArray();
             myBA.writeObject(obj);
             myBA.position = 0;
-            return( myBA.readObject() );
+            return ( myBA.readObject() );
         }
 
         /**
          * @see flash.net.NetConnection.call
          */
-        public function call(command:String, responder:Responder = null, ...parameters):void
-        {
-            if (!_nc || !_nc.connected)
+        public function call(command:String, responder:Responder = null, ...parameters):void {
+            if(!_nc || !_nc.connected)
                 throw(new Error("NetConnection must be connected in order to make a call on it."));
 
             _nc.call.apply(null, [command, responder].concat(parameters));
@@ -410,26 +382,23 @@ package com.gearsandcogs.utils
          * @param is_dirty
          * @see flash.net.NetConnection.close
          */
-        public function close(is_dirty:Boolean = false):void
-        {
-            if (_reconnectTimer)
-            {
+        public function close(is_dirty:Boolean = false):void {
+            if(_reconnectTimer) {
                 _reconnectTimer.stop();
                 _reconnectTimer = null;
             }
 
-            if (!_nc)
+            if(!_nc)
                 return;
 
-            if (!is_dirty)
-            {
+            if(!is_dirty) {
                 _was_connected = false;
                 _nc.was_connected = false;
             }
 
             _nc.close();
 
-            if (is_dirty)
+            if(is_dirty)
                 return;
 
             _nc = null;
@@ -441,20 +410,18 @@ package com.gearsandcogs.utils
          * specified in the port array as well as for allowed protocols.
          * @see flash.net.NetConnection.connect
          */
-        public function connect(command:String, ...parameters):void
-        {
-            if (debug)
+        public function connect(command:String, ...parameters):void {
+            if(debug)
                 log(VERSION);
 
             //check for null connection param
-            if (command == null)
-            {
+            if(command == null) {
                 _nc = new PortConnection(0, "", debug);
                 _nc.connect(null);
                 return;
             }
 
-            if (connecting || connected)
+            if(connecting || connected)
                 return;
 
             _connect_init_time = new Date().time;
@@ -464,18 +431,17 @@ package com.gearsandcogs.utils
             _connect_string_init = ~command.indexOf("://") ? command.substring(command.indexOf("://") + 3) : command;
 
             //strip port declaration
-            if (~_connect_string_init.indexOf(":"))
-            {
+            if(~_connect_string_init.indexOf(":")) {
                 var split_connect:Array = _connect_string_init.split(":");
                 _connect_string_init = split_connect[0] + split_connect[1].substring(split_connect[1].indexOf("/"));
             }
 
             //setting very low connection rate but helps to avoid race conditions serverside
-            if (shotgun_connect)
+            if(shotgun_connect)
                 connection_rate = 100;
 
             //create new guid
-            if (recreate_guid && _initial_connect_run)
+            if(recreate_guid && _initial_connect_run)
                 _guid = GUID.create();
 
             initConnectionTypes();
@@ -489,21 +455,20 @@ package com.gearsandcogs.utils
             _nc = null;
             closeExtraNc();
 
-            if (_server_string == "" || _app_string.length < 2)
+            if(_server_string == "" || _app_string.length < 2)
                 throw(new Error("Invalid application path. Need server and application name"));
 
-            if (secure && force_tunneling)
+            if(secure && force_tunneling)
                 throw(new Error("Secure connections cannot run over rtmpt. Either turn off force tunneling or the secure flag."));
 
-            if (sequential_connect)
+            if(sequential_connect)
                 initConnection();
             else
                 initializeTimers();
         }
 
-        protected function initConnectionTypes():void
-        {
-            if (skip_tunneling && force_tunneling)
+        protected function initConnectionTypes():void {
+            if(skip_tunneling && force_tunneling)
                 throw(new Error("Cannot force tunneling and skip tunneling. Please choose one or the other."));
 
             var assignmentOverrideArray:Array = [];
@@ -512,31 +477,27 @@ package com.gearsandcogs.utils
             var rtmpConnectArray:Array = [];
             var rtmptArray:Array = [];
 
-            for each(var r:Object in _portArray)
-            {
-                if (r is NetConnectionType)
-                {
+            for each(var r:Object in _portArray) {
+                if(r is NetConnectionType) {
                     assignmentOverrideArray.push(r);
                     continue;
                 }
 
                 var port:String = r.toString();
-                if (!force_tunneling)
-                {
-                    if (proxyType == PROXYTYPE_NONE)
+                if(!force_tunneling) {
+                    if(proxyType == PROXYTYPE_NONE)
                         rtmpConnectArray.push(new NetConnectionType(RTMP, port, encrypted ? "e" : secure ? "s" : "", PROXYTYPE_CONNECTONLY));
                     rtmpArray.push(new NetConnectionType(RTMP, port, encrypted ? "e" : secure ? "s" : "", proxyType));
                 }
-                if (enable_rtmfp)
+                if(enable_rtmfp)
                     rtmfpArray.push(new NetConnectionType(RTMFP, port));
-                if (!skip_tunneling && !secure)
+                if(!skip_tunneling && !secure)
                     rtmptArray.push(new NetConnectionType(RTMPT, port, encrypted ? "e" : "", proxyType == PROXYTYPE_NONE ? PROXYTYPE_BEST : proxyType));
             }
             _ncTypes = Vector.<NetConnectionType>([].concat(assignmentOverrideArray, rtmfpArray, rtmpArray, rtmpConnectArray, rtmptArray));
         }
 
-        protected function initPortConnection(nc_num:uint):NetConnectionType
-        {
+        protected function initPortConnection(nc_num:uint):NetConnectionType {
             var encrypted_secure_identifier:String = encrypted ? "Encrypted " : secure ? "Secure " : "";
 
             var curr_nct:NetConnectionType = _ncTypes[nc_num];
@@ -554,8 +515,7 @@ package com.gearsandcogs.utils
             return curr_nct;
         }
 
-        private function acceptNc(portConnection:PortConnection):void
-        {
+        private function acceptNc(portConnection:PortConnection):void {
             _nc = portConnection;
 
             _nc.removeEventListener(PortConnection.STATUS_UPDATE, checkNetStatus);
@@ -568,15 +528,14 @@ package com.gearsandcogs.utils
 
             _nc.client = _ncClient;
 
-            if (_connectTimer)
+            if(_connectTimer)
                 _connectTimer.stop();
 
             closeExtraNc();
         }
 
-        private function closeDownNc(pc:PortConnection):void
-        {
-            if (debug)
+        private function closeDownNc(pc:PortConnection):void {
+            if(debug)
                 log("Closing down NetConnection: " + pc.label);
 
             pc.removeEventListener(PortConnection.STATUS_UPDATE, checkNetStatus);
@@ -586,21 +545,17 @@ package com.gearsandcogs.utils
             pc.deactivateHandlers();
         }
 
-        private function closeExtraNc():void
-        {
-            for each(var n:NetConnectionType in _ncTypes)
-            {
+        private function closeExtraNc():void {
+            for each(var n:NetConnectionType in _ncTypes) {
                 var portConnection:PortConnection = n.connection;
-                if (portConnection && portConnection != _nc)
-                {
+                if(portConnection && portConnection != _nc) {
                     closeDownNc(portConnection);
                     n.connection = null;
                 }
             }
         }
 
-        private function connectionSuccess(conn:PortConnection):void
-        {
+        private function connectionSuccess(conn:PortConnection):void {
             _is_connecting = false;
             _was_connected = true;
             _reconnect_count = 0;
@@ -610,12 +565,10 @@ package com.gearsandcogs.utils
             handleNetStatus(conn.status);
         }
 
-        private function initConnection(connect_count:uint = 0):void
-        {
+        private function initConnection(connect_count:uint = 0):void {
             //all connection attempts have been tried
-            if (connect_count >= _ncTypes.length)
-            {
-                if (_connectTimer)
+            if(connect_count >= _ncTypes.length) {
+                if(_connectTimer)
                     _connectTimer.stop();
                 return;
             }
@@ -623,61 +576,55 @@ package com.gearsandcogs.utils
             _connection_attempt_count = connect_count;
             var curr_nct:NetConnectionType = initPortConnection(connect_count);
 
-            if (!curr_nct.connection.status)
+            if(!curr_nct.connection.status)
                 processConnection(curr_nct.connection, curr_nct.full_protocol, curr_nct.port, _connectParams);
         }
 
-        private function initializeTimers():void
-        {
-            if (debug)
+        private function initializeTimers():void {
+            if(debug)
                 log("Connecting at a rate of: " + connection_rate);
 
-            if (_connectTimer)
+            if(_connectTimer)
                 _connectTimer.stop();
 
             _connectTimer = new Timer(connection_rate);
-            _connectTimer.addEventListener(TimerEvent.TIMER, function (e:TimerEvent):void
-            {
+            _connectTimer.addEventListener(TimerEvent.TIMER, function (e:TimerEvent):void {
                 initConnection(_connectTimer.currentCount - 1);
             });
 
             _connectTimer.start();
         }
 
-        private function log(msg:String):void
-        {
-            if (debug)
+        private function log(msg:String):void {
+            if(debug)
                 trace("NetConnectionSmart: " + msg);
             dispatchEvent(new ParamEvent(PARAM_EVT, false, false, msg));
         }
 
-        private function processConnection(connection:PortConnection, protocol:String, port:String, parameters:Array):void
-        {
-            if (default_port_only && port != "default")
+        private function processConnection(connection:PortConnection, protocol:String, port:String, parameters:Array):void {
+            if(default_port_only && port != "default")
                 return;
 
             var portpass:String = port != "default" ? ":" + port : "";
 
-            if (debug)
+            if(debug)
                 log("connecting to: " + protocol + "://" + _server_string + portpass + _app_string + " with proxyType: " + connection.proxyType);
 
             connection.connect.apply(null, [protocol + "://" +
-                _server_string + portpass + _app_string].concat(parameters));
+            _server_string + portpass + _app_string].concat(parameters));
         }
 
-        protected function handleNetStatus(e:NetStatusEvent):void
-        {
-            if (debug && e.info && e.info.code)
+        protected function handleNetStatus(e:NetStatusEvent):void {
+            if(debug && e.info && e.info.code)
                 log(e.info.code);
 
             dispatchEvent(e);
 
-            if (!auto_reconnect || !was_connected || (e.info.code != NETCONNECTION_CONNECT_CLOSED && e.info.code != NETCONNECTION_CONNECT_FAILED))
+            if(!auto_reconnect || !was_connected || (e.info.code != NETCONNECTION_CONNECT_CLOSED && e.info.code != NETCONNECTION_CONNECT_FAILED))
                 return;
 
-            if (reconnect_count_limit == 0 || (_reconnect_count < reconnect_count_limit))
-            {
-                if (debug)
+            if(reconnect_count_limit == 0 || (_reconnect_count < reconnect_count_limit)) {
+                if(debug)
                     log("attempting to reconnect");
 
                 e.info.code = NETCONNECTION_RECONNECT_INIT;
@@ -686,17 +633,15 @@ package com.gearsandcogs.utils
 
                 var calculated_reconnect_wait:uint = (Math.min(reconnect_max_time_wait, (Math.pow(2, _reconnect_count) - 1) / 2) + Math.random()) * 1000;
                 _reconnectTimer = new Timer(calculated_reconnect_wait, 1);
-                _reconnectTimer.addEventListener(TimerEvent.TIMER_COMPLETE, function (e:TimerEvent):void
-                {
+                _reconnectTimer.addEventListener(TimerEvent.TIMER_COMPLETE, function (e:TimerEvent):void {
                     connect.apply(null, [_connect_string_init].concat(_connectParamsInit));
                     _reconnectTimer = null;
                 });
 
                 _reconnectTimer.start();
             }
-            else
-            {
-                if (debug)
+            else {
+                if(debug)
                     log("reconnect limit reached");
 
                 e.info.code = NETCONNECTION_RECONNECT_FAILED;
@@ -706,82 +651,73 @@ package com.gearsandcogs.utils
             dispatchEvent(e);
         }
 
-        private function checkNetStatus(e:Event):void
-        {
+        private function checkNetStatus(e:Event):void {
             var targetConnection:PortConnection = e.target as PortConnection;
 
-            if (debug)
+            if(debug)
                 log(targetConnection.label + ": " + targetConnection.status.info.code);
 
             var status_count:uint = 0;
             var rejected_connection:PortConnection;
 
-            for each(var i:NetConnectionType in _ncTypes)
-            {
+            for each(var i:NetConnectionType in _ncTypes) {
                 var curr_connection:PortConnection = i.connection;
 
-                if (!curr_connection)
+                if(!curr_connection)
                     continue;
 
-                if (curr_connection.status)
+                if(curr_connection.status)
                     status_count++;
 
-                if (port_test)
-                {
-                    if (curr_connection.connected)
+                if(port_test) {
+                    if(curr_connection.connected)
                         closeDownNc(curr_connection);
                 }
-                else if (!connected && curr_connection.connected)
-                {
+                else if(!connected && curr_connection.connected) {
                     connectionSuccess(curr_connection);
                     return;
                 }
-                else if (!rejected_connection && curr_connection.rejected)
+                else if(!rejected_connection && curr_connection.rejected)
                     rejected_connection = curr_connection;
             }
 
-            if (port_test)
+            if(port_test)
                 dispatchEvent(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false, {code: NETCONNECTION_PORT_TEST_UPDATE, internalTarget: targetConnection}));
 
             //if no success at all return the first rejected message or
             //return the status of the first connection in the array
-            if (status_count == _ncTypes.length)
-            {
+            if(status_count == _ncTypes.length) {
                 _is_connecting = false;
 
-                if (port_test)
-                {
-                    if (debug)
+                if(port_test) {
+                    if(debug)
                         log("port test complete");
 
                     dispatchEvent(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false, {code: NETCONNECTION_PORT_TEST_COMPLETE}));
                 }
-                else if (!rejected_connection)
+                else if(!rejected_connection)
                     handleNetStatus(_ncTypes[_ncTypes.length - 1].connection.status);
                 else
                     handleNetStatus(rejected_connection.status);
             }
-            else if (sequential_connect)
+            else if(sequential_connect)
                 initConnection(++_connection_attempt_count);
         }
 
-        private function handleAsyncError(e:AsyncErrorEvent):void
-        {
-            if (debug)
+        private function handleAsyncError(e:AsyncErrorEvent):void {
+            if(debug)
                 log(e.error.toString());
             dispatchEvent(e);
         }
 
-        private function handleIoError(e:IOErrorEvent):void
-        {
-            if (debug)
+        private function handleIoError(e:IOErrorEvent):void {
+            if(debug)
                 log(e.text);
             dispatchEvent(e);
         }
 
-        private function handleSecurityError(e:SecurityErrorEvent):void
-        {
-            if (debug)
+        private function handleSecurityError(e:SecurityErrorEvent):void {
+            if(debug)
                 log(e.text);
             dispatchEvent(e);
         }

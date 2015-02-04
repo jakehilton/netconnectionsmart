@@ -16,14 +16,12 @@ package com.gearsandcogs.utils
         private var valid_connect_server:String = "wowzaec2demo.streamlock.net/vod/";
         private var invalid_connect_server:String = "wowzaec2demo.streamlockbad.net/vod/";
 
-        public function NetConnectionSmartReconnectTest()
-        {
+        public function NetConnectionSmartReconnectTest() {
             super();
         }
 
         [Before(async)]
-        public function setUp():void
-        {
+        public function setUp():void {
             auto_reconnect = true;
             reconnect_count_limit = 1;
             connect(valid_connect_server);
@@ -31,14 +29,12 @@ package com.gearsandcogs.utils
         }
 
         [After]
-        public function tearDown():void
-        {
+        public function tearDown():void {
             auto_reconnect = false;
         }
 
         [Test(async)]
-        public function testDisconnectReconnectFail():void
-        {
+        public function testDisconnectReconnectFail():void {
             assertTrue(connected);
 
             var test_complete:String = "test_complete";
@@ -46,10 +42,8 @@ package com.gearsandcogs.utils
             var failed_fired:Boolean = false;
 
             addEventListener(NetStatusEvent.NET_STATUS, handleNetStatus);
-            function handleNetStatus(e:NetStatusEvent):void
-            {
-                switch (e.info.code)
-                {
+            function handleNetStatus(e:NetStatusEvent):void {
+                switch(e.info.code) {
                     case NETCONNECTION_CONNECT_CLOSED:
                         closed_fired = true;
                         break;
@@ -65,8 +59,7 @@ package com.gearsandcogs.utils
             }
 
             // we can't close the connection based on a netconnection success event so we delay
-            setTimeout(function ():void
-            {
+            setTimeout(function ():void {
                 _connect_string_init = invalid_connect_server;
                 close(true);
                 assertFalse(connected);
@@ -76,8 +69,7 @@ package com.gearsandcogs.utils
         }
 
         [Test(async)]
-        public function testDisconnectReconnectSuccess():void
-        {
+        public function testDisconnectReconnectSuccess():void {
             assertTrue(connected);
 
             var reconnect_success:String = "reconnect_success";
@@ -85,10 +77,8 @@ package com.gearsandcogs.utils
             var reconnect_fired:Boolean = false;
 
             addEventListener(NetStatusEvent.NET_STATUS, handleNetStatus);
-            function handleNetStatus(e:NetStatusEvent):void
-            {
-                switch (e.info.code)
-                {
+            function handleNetStatus(e:NetStatusEvent):void {
+                switch(e.info.code) {
                     case NETCONNECTION_CONNECT_CLOSED:
                         closed_fired = true;
                         break;
@@ -104,8 +94,7 @@ package com.gearsandcogs.utils
             }
 
             // we can't close the connection based on a netconnection success event so we delay
-            setTimeout(function ():void
-            {
+            setTimeout(function ():void {
                 close(true);
                 assertFalse(connected);
             }, 100);

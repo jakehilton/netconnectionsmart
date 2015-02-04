@@ -16,31 +16,26 @@ package com.gearsandcogs.utils
         private var valid_server:String = "wowzaec2demo.streamlock.net/vod/";
         private var invalid_server:String = "1.com/no_app/";
 
-        public function NetConnectionSmartTest()
-        {
+        public function NetConnectionSmartTest() {
             super();
         }
 
         [Before]
-        public function setUp():void
-        {
+        public function setUp():void {
         }
 
         [After]
-        public function tearDown():void
-        {
+        public function tearDown():void {
 
         }
 
         [Test]
-        public function testCloseNoCrash():void
-        {
+        public function testCloseNoCrash():void {
             close();
         }
 
         [Test]
-        public function testComplexPortArray():void
-        {
+        public function testComplexPortArray():void {
             portArray = [
                 new NetConnectionType(NetConnectionSmart.RTMP, "1935", "", NetConnectionSmart.PROXYTYPE_NONE),
                 new NetConnectionType(NetConnectionSmart.RTMP, "443", "s", NetConnectionSmart.PROXYTYPE_BEST),
@@ -59,11 +54,9 @@ package com.gearsandcogs.utils
         }
 
         [Test(async, timeout="60000")]
-        public function testConnectFail():void
-        {
+        public function testConnectFail():void {
             Async.handleEvent(this, this, NetStatusEvent.NET_STATUS, handleNetStatus, 60000, this);
-            function handleNetStatus(e:NetStatusEvent, test:NetConnectionSmartTest):void
-            {
+            function handleNetStatus(e:NetStatusEvent, test:NetConnectionSmartTest):void {
                 assertEquals(e.info.code, NETCONNECTION_CONNECT_FAILED);
             }
 
@@ -71,54 +64,46 @@ package com.gearsandcogs.utils
         }
 
         [Test]
-        public function testConnectSuccessNull():void
-        {
+        public function testConnectSuccessNull():void {
             connect(null);
         }
 
         [Test(expects="Error")]
-        public function testIncompatibleSecureForceTunneling():void
-        {
+        public function testIncompatibleSecureForceTunneling():void {
             secure = true;
             force_tunneling = true;
             connect(valid_server);
         }
 
         [Test(expects="Error")]
-        public function testIncompatibleSkipTunnelingForceTunneling():void
-        {
+        public function testIncompatibleSkipTunnelingForceTunneling():void {
             skip_tunneling = true;
             force_tunneling = true;
             connect(valid_server);
         }
 
         [Test]
-        public function testInitConnectionTypes():void
-        {
+        public function testInitConnectionTypes():void {
             initConnectionTypes();
             assertNotNull(_ncTypes);
             assertTrue(_ncTypes.length > 0);
         }
 
         [Test]
-        public function testInitPortConnection():void
-        {
+        public function testInitPortConnection():void {
             initConnectionTypes();
             assertTrue(initPortConnection(0) is NetConnectionType);
         }
 
         [Test(expects="Error")]
-        public function testInvalidPathConnect():void
-        {
+        public function testInvalidPathConnect():void {
             connect("invalidpath.com");
         }
 
         [Test(async, timeout="60000")]
-        public function testNetConnectionInfoValid():void
-        {
+        public function testNetConnectionInfoValid():void {
             Async.handleEvent(this, this, NetStatusEvent.NET_STATUS, handleNetStatus, 60000, this);
-            function handleNetStatus(e:NetStatusEvent, test:NetConnectionSmartTest):void
-            {
+            function handleNetStatus(e:NetStatusEvent, test:NetConnectionSmartTest):void {
                 var values:Vector.<Object> = netConnectionsInfo;
                 var connectionToTest:Object = values[0];
                 assertTrue(connectionToTest.hasOwnProperty("port"));
@@ -138,13 +123,11 @@ package com.gearsandcogs.utils
         }
 
         [Test(async, timeout="60000")]
-        public function testNetConnectionResponseTime():void
-        {
+        public function testNetConnectionResponseTime():void {
             var connect_init_time:Number = new Date().getTime();
 
             Async.handleEvent(this, this, NetStatusEvent.NET_STATUS, handleNetStatus, 60000, this);
-            function handleNetStatus(e:NetStatusEvent, test:NetConnectionSmartTest):void
-            {
+            function handleNetStatus(e:NetStatusEvent, test:NetConnectionSmartTest):void {
                 assertEquals(e.info.code, NETCONNECTION_CONNECT_SUCCESS);
 
                 //round the numbers slightly so if we're 1ms off we don't blow up
@@ -157,14 +140,12 @@ package com.gearsandcogs.utils
         }
 
         [Test]
-        public function testPortArray():void
-        {
+        public function testPortArray():void {
             assertNotNull(portArray);
         }
 
         [Test]
-        public function testProxyType():void
-        {
+        public function testProxyType():void {
             assertEquals(proxyType, "none");
         }
     }

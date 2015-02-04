@@ -18,16 +18,14 @@ package com.gearsandcogs.utils
          * @param security Pass in an "e" for encryped or an "s" for secure. RTMPE vs RTMPS
          * @param proxyType Proxy type to be applied to this netconnection
          */
-        public function NetConnectionType(protocol:String, port:String, security:String = "", proxyType:String = "none")
-        {
+        public function NetConnectionType(protocol:String, port:String, security:String = "", proxyType:String = "none") {
             this.port = port;
             this.protocol = protocol;
             this.proxyType = proxyType;
             this.security = security;
         }
 
-        public function get full_protocol():String
-        {
+        public function get full_protocol():String {
             return protocol + security;
         }
     }

@@ -24,8 +24,7 @@ package com.gearsandcogs.utils
         private var _connect_init_time:Number;
         private var _timeoutTimer:Timer;
 
-        public function PortConnection(id:int, label:String, debug:Boolean = false)
-        {
+        public function PortConnection(id:int, label:String, debug:Boolean = false) {
             super();
             this.debug = debug;
             this.id = id;
@@ -33,54 +32,43 @@ package com.gearsandcogs.utils
             addHandlers();
         }
 
-        override public function get connectedProxyType():String
-        {
+        override public function get connectedProxyType():String {
             return _connected_proxy_type;
         }
 
-        public function set connectedProxyType(s:String):void
-        {
+        public function set connectedProxyType(s:String):void {
             _connected_proxy_type = s;
         }
 
-        public function get rejected():Boolean
-        {
-            try
-            {
+        public function get rejected():Boolean {
+            try {
                 return status.info.code == NetConnectionSmart.NETCONNECTION_CONNECT_REJECTED;
             }
-            catch (e:Error)
-            {
+            catch(e:Error) {
                 //no status info object exists
             }
 
             return false;
         }
 
-        public function get was_connected():Boolean
-        {
+        public function get was_connected():Boolean {
             return _was_connected;
         }
 
-        public function set was_connected(b:Boolean):void
-        {
+        public function set was_connected(b:Boolean):void {
             _was_connected = b;
         }
 
-        private static function log(msg:String):void
-        {
+        private static function log(msg:String):void {
             trace("PortConnection: " + msg);
         }
 
-        override public function connect(command:String, ...rest):void
-        {
+        override public function connect(command:String, ...rest):void {
             //start a timer here so we can watch this so if it doesn't connect in time we can kill it
-            if (!_timeoutTimer)
-            {
+            if(!_timeoutTimer) {
                 _timeoutTimer = new Timer(connection_timeout * 1000, 1);
-                _timeoutTimer.addEventListener(TimerEvent.TIMER_COMPLETE, function (e:TimerEvent):void
-                {
-                    if (debug)
+                _timeoutTimer.addEventListener(TimerEvent.TIMER_COMPLETE, function (e:TimerEvent):void {
+                    if(debug)
                         log("connection timeout");
 
                     handleNetStatus(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false,
@@ -93,15 +81,13 @@ package com.gearsandcogs.utils
             super.connect.apply(null, [command].concat(rest));
         }
 
-        public function addHandlers():void
-        {
+        public function addHandlers():void {
             addEventListener(AsyncErrorEvent.ASYNC_ERROR, handleAsyncError);
             addEventListener(NetStatusEvent.NET_STATUS, handleNetStatus);
         }
 
-        public function deactivateHandlers():void
-        {
-            if (_timeoutTimer)
+        public function deactivateHandlers():void {
+            if(_timeoutTimer)
                 _timeoutTimer.stop();
 
             _timeoutTimer = null;
@@ -109,35 +95,30 @@ package com.gearsandcogs.utils
         }
 
         //noinspection JSUnusedGlobalSymbols
-        public function getProtocol():String
-        {
+        public function getProtocol():String {
             return uri.substring(0, uri.indexOf("://"));
         }
 
         //noinspection JSUnusedGlobalSymbols
-        public function onBWDone():void
-        {
+        public function onBWDone():void {
             //don't do anything
         }
 
-        private function handleNetStatus(e:NetStatusEvent):void
-        {
-            if (_internal_event_handlers_deactivated)
+        private function handleNetStatus(e:NetStatusEvent):void {
+            if(_internal_event_handlers_deactivated)
                 return;
 
             _timeoutTimer.stop();
             response_time = new Date().time - _connect_init_time;
 
-            if (connected)
-            {
+            if(connected) {
                 was_connected = true;
                 connectedProxyType = super.connectedProxyType;
             }
 
             //if rejected connection came in we want to preserve that message
-            if (!status || (status && status.info.code != NetConnectionSmart.NETCONNECTION_CONNECT_REJECTED))
-            {
-                if (debug)
+            if(!status || (status && status.info.code != NetConnectionSmart.NETCONNECTION_CONNECT_REJECTED)) {
+                if(debug)
                     log(label + " " + e.info.code);
 
                 status = e;
@@ -145,12 +126,11 @@ package com.gearsandcogs.utils
             }
         }
 
-        private function handleAsyncError(e:AsyncErrorEvent):void
-        {
-            if (_internal_event_handlers_deactivated)
+        private function handleAsyncError(e:AsyncErrorEvent):void {
+            if(_internal_event_handlers_deactivated)
                 return;
 
-            if (debug)
+            if(debug)
                 log(e.toString());
         }
     }
