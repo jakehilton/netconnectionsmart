@@ -46,8 +46,7 @@ For example:
 
 ```ActionScript
 var client_obj:Object = new Object();
-client_obj.serverMethod = function(e:Object):void
-{
+client_obj.serverMethod = function(e:Object):void{
     trace("server can call this");
 }
 
@@ -55,14 +54,12 @@ var ncs:NetConnectionSmart = new NetConnectionSmart();
 ncs.client = client_obj;
 ncs.encrypted = true; //if this isn't specified it will default to rtmp/rtmpt.. if true it will try rtmpe/rtmpte
 
-ncs.addEventListener(NetStatusEvent.NET_STATUS,function(e:NetStatusEvent):void
-{
+ncs.addEventListener(NetStatusEvent.NET_STATUS,function(e:NetStatusEvent):void{
     trace("connection status: "+e.info.code);
     trace(ncs.uri);
     trace(ncs.protocol);
     
-    switch (e.info.code)
-    {
+    switch (e.info.code){
         case NetConnectionSmart.NETCONNECTION_CONNECT_SUCCESS:
             var ns:NetStream = new NetStream(ncs.connection);
             //do other netstream actions
