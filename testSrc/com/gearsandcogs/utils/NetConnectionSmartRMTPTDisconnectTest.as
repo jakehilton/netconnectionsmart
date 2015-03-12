@@ -42,9 +42,8 @@ package com.gearsandcogs.utils
                 }
             }
 
-            // we can't close the connection based on a netconnection success event so we delay
+            closeDownNc(connection);
             setTimeout(function ():void {
-                close();
                 assertFalse(connected);
             }, 100);
 

@@ -475,6 +475,16 @@ package com.gearsandcogs.utils
                 initializeTimers();
         }
 
+        protected function closeDownNc(pc:PortConnection):void {
+            if(debug)
+                log("Closing down NetConnection: " + pc.label);
+
+            //cleanup listeners
+            pc.removeEventListener(PortConnection.STATUS_UPDATE, checkNetStatus);
+            //add some delay so we can run this in response to a NetStatus Event
+            setTimeout(pc.close, 0);
+        }
+
         protected function initConnectionTypes():void {
             if(skip_tunneling && force_tunneling)
                 throw(new Error("Cannot force tunneling and skip tunneling. Please choose one or the other."));
@@ -540,16 +550,6 @@ package com.gearsandcogs.utils
                 _connectTimer.stop();
 
             closeExtraNc();
-        }
-
-        private function closeDownNc(pc:PortConnection):void {
-            if(debug)
-                log("Closing down NetConnection: " + pc.label);
-
-            //cleanup listeners
-            pc.removeEventListener(PortConnection.STATUS_UPDATE, checkNetStatus);
-            //add some delay so we can run this in response to a NetStatus Event
-            setTimeout(pc.close, 0);
         }
 
         private function closeExtraNc():void {
