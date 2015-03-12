@@ -63,6 +63,11 @@ package com.gearsandcogs.utils
             trace("PortConnection: " + msg);
         }
 
+        override public function close():void {
+            super.close();
+            deactivateHandlers();
+        }
+
         override public function connect(command:String, ...rest):void {
             //start a timer here so we can watch this so if it doesn't connect in time we can kill it
             if(!_timeoutTimer) {

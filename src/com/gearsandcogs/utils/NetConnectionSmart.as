@@ -15,7 +15,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- VERSION: 1.9.0
+ VERSION: 1.9.2
  DATE: 09/26/2014
  ACTIONSCRIPT VERSION: 3.0
  DESCRIPTION:
@@ -118,6 +118,7 @@ package com.gearsandcogs.utils
     import flash.net.Responder;
     import flash.utils.ByteArray;
     import flash.utils.Timer;
+    import flash.utils.setTimeout;
 
     public class NetConnectionSmart extends EventDispatcher
     {
@@ -147,7 +148,7 @@ package com.gearsandcogs.utils
         public static const RTMFP:String = "rtmfp";
         public static const RTMP:String = "rtmp";
         public static const RTMPT:String = "rtmpt";
-        public static const VERSION:String = "NetConnectionSmart v 1.9.1";
+        public static const VERSION:String = "NetConnectionSmart v 1.9.2";
 
         /**
          * Boolean to determine if a unique alphanumeric string should be passed at the end of the param set to the media server
@@ -545,11 +546,10 @@ package com.gearsandcogs.utils
             if(debug)
                 log("Closing down NetConnection: " + pc.label);
 
+            //cleanup listeners
             pc.removeEventListener(PortConnection.STATUS_UPDATE, checkNetStatus);
-            pc.close();
-
-            //cleanup listener
-            pc.deactivateHandlers();
+            //add some delay so we can run this in response to a NetStatus Event
+            setTimeout(pc.close, 0);
         }
 
         private function closeExtraNc():void {
