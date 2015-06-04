@@ -15,8 +15,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- VERSION: 1.9.2
- DATE: 09/26/2014
+ VERSION: 1.9.3
+ DATE: 06/04/2015
  ACTIONSCRIPT VERSION: 3.0
  DESCRIPTION:
  A replacement class for the standard NetConnection actionscript class. This easily enables multiple port attempts to resolve at the best functioning port and protocol.
@@ -123,7 +123,7 @@ package com.gearsandcogs.utils
     public class NetConnectionSmart extends EventDispatcher
     {
         //noinspection JSUnusedGlobalSymbols
-        public static const NETCONNECTION_CALL_BadVersion:String = "NetConnection.Call.BadVersion";
+        public static const NETCONNECTION_CALL_BADVERSION:String = "NetConnection.Call.BadVersion";
         public static const NETCONNECTION_CALL_FAILED:String = "NetConnection.Call.Failed";
         public static const NETCONNECTION_CALL_PROHIBITED:String = "NetConnection.Call.Prohibited";
         public static const NETCONNECTION_CONNECT_APPSHUTDOWN:String = "NetConnection.Connect.AppShutdown";
